@@ -5,6 +5,7 @@ import { CRT_CONTROLS, createCRTUniforms, crtFragment, crtUniformName } from './
 const SCREEN_WIDTH = .567;
 const SCREEN_HEIGHT = .475;
 const MIN_EMISSION_LUMINANCE = .3;
+export const TV_GLARE_INTENSITY = .425;
 
 export function createCRTScreen(screen, videoTexture) {
   if (!THREE.UniformsLib.LTC_FLOAT_1) RectAreaLightUniformsLib.init();
@@ -27,7 +28,7 @@ export function createCRTScreen(screen, videoTexture) {
     clearcoat: 1,
     clearcoatRoughness: .045,
     envMap: originalMaterial.envMap,
-    envMapIntensity: .85,
+    envMapIntensity: TV_GLARE_INTENSITY,
   });
   material.name = 'Reflective CRT video glass';
   material.extensions = { derivatives: true };

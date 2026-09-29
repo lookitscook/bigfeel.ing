@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../vendor/three.module.js';
-import { createCRTScreen } from '../src/crt-screen.js';
+import { createCRTScreen, TV_GLARE_INTENSITY } from '../src/crt-screen.js';
 import { CRT_CONTROLS, CRT_DEFAULTS, crtUniformName } from '../src/crt-shader.js';
 
 function fixture() {
@@ -21,6 +21,8 @@ test('turning off TV restores original glass and disables the area light and blo
   crt.setEnabled(true);
   assert.notEqual(screen.material, originalMaterial);
   assert.notEqual(screen.geometry, originalGeometry);
+  assert.equal(screen.material.envMapIntensity, TV_GLARE_INTENSITY);
+  assert.equal(TV_GLARE_INTENSITY, .425);
   assert.ok(light.intensity > 0);
   assert.equal(glow.visible, true);
   crt.setEnabled(false);

@@ -213,11 +213,16 @@ test('the selected landmark is centered under the reticle on the first frame and
 
 test('emotion selection events wait for the picker snap to settle', async () => {
   const app = await selector();
+  const transitions = [];
   const selected = [];
+  app.elements['pad-stage'].addEventListener('pad-emotion-transition', event => transitions.push({
+    name: event.detail.name, duration: event.detail.duration, startedAt: event.detail.startedAt,
+  }));
   app.elements['pad-stage'].addEventListener('pad-emotion-selected', event => selected.push(event.detail.name));
   const picker = app.elements['pad-landmark-picker'];
   picker.value = String(model.PAD_EMOTIONS.findIndex(([name]) => name === 'Sad'));
   picker.fire('change');
+  assert.deepEqual(transitions, [{ name: 'Sad', duration: 420, startedAt: 0 }]);
   app.tick(210);
   assert.deepEqual(selected, []);
   app.tick(420);

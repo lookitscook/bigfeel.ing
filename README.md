@@ -59,7 +59,13 @@ saved editor settings. The logo's sphere follows the selector's current
 front-facing color gradient live, before sepia and without mesh lines, points,
 or labels. When an emotion settles under the reticle, the homepage body switches
 to its four-paragraph “Big Feeling copy” from the Emotion Cue Matrix at the same
-time as the television changes videos. Its saved soft edge and cross-hatch settings
+time as the television changes videos. Characters briefly scramble through a
+seeded set of unstable glyphs before progressively resolving into the new copy.
+Only new words or words whose paragraph-relative positions moved are decoded;
+unchanged words stay stable. Encoded words interpolate from their old lengths to
+their new lengths using only uppercase `A–F` and `1–9`. The decode starts with
+the globe's 420 ms selection motion so both finish together. Reduced-motion
+preferences produce an instant swap instead. Its saved soft edge and cross-hatch settings
 then apply to that source; the logo retains its own sepia filter. Headings use
 locally bundled Literata; body copy and navigation use locally bundled Inter.
 

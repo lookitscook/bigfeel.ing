@@ -72,14 +72,86 @@ export function homeCopyForEmotion(name) {
   return Object.entries(HOME_COPY).find(([emotion]) => emotion.toLowerCase() === normalized)?.[1] ?? null;
 }
 
-export function renderHomeCopy(container, name) {
-  const paragraphs = homeCopyForEmotion(name);
-  if (!container || !paragraphs) return false;
-  container.replaceChildren(...paragraphs.map(text => {
-    const paragraph = container.ownerDocument.createElement('p');
-    paragraph.textContent = text;
-    return paragraph;
-  }));
-  return true;
+const copyDecoders = new WeakMap();
+const DECODE_ALPHABET = 'ABCDEF123456789';
+const DECODE_DURATION = 420;
+
+function wordsWithPositions(text) {
+  return Array.from(text.matchAll(/\S+/g), match => ({ text: match[0], index: match.index }));
 }
 
+export function decodeParagraphWords(source, target, progress, frame, paragraphIndex = 0) {
+  if (progress >= 1) return target;
+  const sourceWords = wordsWithPositions(source);
+  const targetWords = wordsWithPositions(target);
+  const sourceByPosition = new Map(sourceWords.map(word => [word.index, word.text]));
+  const decoded = [];
+  const wordCount = Math.max(sourceWords.length, targetWords.length);
+  for (let wordIndex = 0; wordIndex < wordCount; wordIndex++) {
+    const sourceWord = sourceWords[wordIndex]?.text ?? '';
+    const targetWord = targetWords[wordIndex]?.text ?? '';
+    if (targetWord && sourceByPosition.get(targetWords[wordIndex].index) === targetWord) decoded.push(targetWord);
+    else {
+      const sourceLength = Array.from(sourceWord).length;
+      const targetCharacters = Array.from(targetWord);
+      const length = Math.round(sourceLength + (targetCharacters.length - sourceLength) * progress);
+      decoded.push(Array.from({ length }, (_, characterIndex) => {
+        if (characterIndex < targetCharacters.length
+          && (characterIndex + 1) / targetCharacters.length <= progress) {
+          return targetCharacters[characterIndex];
+        }
+        return DECODE_ALPHABET[(characterIndex * 13 + wordIndex * 19 + paragraphIndex * 17 + frame)
+          % DECODE_ALPHABET.length];
+      }).join(''));
+    }
+  }
+  return decoded.filter(Boolean).join(' ');
+}
+
+function paragraphElements(document, paragraphs) {
+  return paragraphs.map(text => {
+    const paragraph = document.createElement('p');
+    paragraph.textContent = text;
+    return paragraph;
+  });
+}
+
+export function renderHomeCopy(container, name, timing = {}) {
+  const paragraphs = homeCopyForEmotion(name);
+  if (!container || !paragraphs) return false;
+  const document = container.ownerDocument;
+  const view = document.defaultView;
+  const previousDecoder = copyDecoders.get(container);
+  const sources = previousDecoder?.paragraphs ?? Array.from(container.children ?? [])
+    .filter(element => element.tagName?.toLowerCase() === 'p')
+    .map(paragraph => paragraph.textContent);
+  if (previousDecoder) view?.cancelAnimationFrame?.(previousDecoder.frame);
+  copyDecoders.delete(container);
+  let elements = Array.from(container.children ?? [])
+    .filter(element => element.tagName?.toLowerCase() === 'p');
+  const reducedMotion = view?.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const duration = Number.isFinite(timing.duration) ? Math.max(0, timing.duration) : DECODE_DURATION;
+  const canAnimate = elements.length === paragraphs.length && !reducedMotion && duration > 0
+    && typeof view?.requestAnimationFrame === 'function';
+  if (!canAnimate) {
+    container.replaceChildren(...paragraphElements(document, paragraphs));
+    return true;
+  }
+
+  const now = view.performance?.now?.() ?? performance.now();
+  const started = Number.isFinite(timing.startedAt) ? Math.min(timing.startedAt, now) : now;
+  const decoder = { frame: null, paragraphs };
+  function decode(now) {
+    if (copyDecoders.get(container) !== decoder) return;
+    const progress = Math.min(1, (now - started) / duration);
+    elements.forEach((element, paragraphIndex) => {
+      element.textContent = decodeParagraphWords(sources[paragraphIndex], paragraphs[paragraphIndex],
+        progress, Math.floor(now / 38), paragraphIndex);
+    });
+    if (progress < 1) decoder.frame = view.requestAnimationFrame(decode);
+    else copyDecoders.delete(container);
+  }
+  decoder.frame = view.requestAnimationFrame(decode);
+  copyDecoders.set(container, decoder);
+  return true;
+}

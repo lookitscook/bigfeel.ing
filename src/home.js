@@ -21,9 +21,11 @@ selector.addEventListener('pad-selection-change', event => {
   lampBrightness = event.detail.brightness;
   syncLamp();
 }, { signal: lampListeners.signal });
+selector.addEventListener('pad-emotion-transition', event => {
+  renderHomeCopy(homeBody, event.detail.name, event.detail);
+}, { signal: lampListeners.signal });
 selector.addEventListener('pad-emotion-selected', event => {
   selectedEmotion = event.detail.name;
-  renderHomeCopy(homeBody, selectedEmotion);
   syncEmotionVideo();
 }, { signal: lampListeners.signal });
 scene.addEventListener('scene-ready', () => { syncLamp(); syncEmotionVideo(); }, { signal: lampListeners.signal });

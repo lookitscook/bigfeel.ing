@@ -10,6 +10,7 @@ const neutralButton = document.getElementById('pad-neutral');
 const colorSwatch = document.getElementById('pad-color-swatch');
 const colorValue = document.getElementById('pad-color-value');
 const landmarkPicker = document.getElementById('pad-landmark-picker');
+const PAD_SNAP_DURATION = 420;
 document.getElementById('pad-landmark-count').textContent = `${PAD_EMOTIONS.length} EMOTION LANDMARKS`;
 applyPageBackground(readPageBackground());
 
@@ -53,7 +54,7 @@ function createSelector() {
     frame = requestAnimationFrame(now => {
       frame = null;
       if (snap) {
-        const progress = Math.min(1, (now - snap.started) / 420);
+        const progress = Math.min(1, (now - snap.started) / PAD_SNAP_DURATION);
         const eased = progress * progress * (3 - 2 * progress);
         group.quaternion.slerpQuaternions(snap.from, snap.to, eased);
         selectedDirection.copy(front).applyQuaternion(group.quaternion.clone().invert()).normalize();
@@ -332,14 +333,19 @@ function createSelector() {
     const correction = new THREE.Quaternion().setFromUnitVectors(direction.applyQuaternion(group.quaternion).normalize(), front);
     const to = group.quaternion.clone().premultiply(correction).normalize();
     const intensityTo = Math.max(Math.abs(emotion.p), Math.abs(emotion.a), Math.abs(emotion.d));
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const started = performance.now();
+    stage.dispatchEvent(new CustomEvent('pad-emotion-transition', {
+      detail: { name: emotion.name, duration: reducedMotion ? 0 : PAD_SNAP_DURATION, startedAt: started },
+    }));
+    if (reducedMotion) {
       group.quaternion.copy(to);
       selectedDirection.copy(front).applyQuaternion(to.clone().invert()).normalize();
       intensity = intensityTo;
       update(true, true);
       return;
     }
-    snap = { started: performance.now(), from: group.quaternion.clone(), to, intensityFrom: intensity, intensityTo };
+    snap = { started, from: group.quaternion.clone(), to, intensityFrom: intensity, intensityTo };
     updateLandmarks(emotionEl.textContent);
     invalidate();
   }

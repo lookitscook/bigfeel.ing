@@ -6,8 +6,11 @@ export const CAMERA_DEFAULTS = Object.freeze({
 });
 export const CAMERA_DISTANCE_MIN = 0.7;
 export const CAMERA_DISTANCE_MAX = 4.8;
+export const CURSOR_CAMERA_PARALLAX = .07;
+export const CURSOR_CAMERA_ZOOM = .05;
 const clamp = THREE.MathUtils.clamp;
 const copy = state => ({ ...state, target: [...state.target] });
+const neutralView = () => ({ x: 0, y: 0, zoom: 1 });
 
 // Inset from the room's actual edges (x = ±6, ceiling y = 5, floor end z = 6).
 // Test the whole frustum against these faces, so its corners cannot reveal a
@@ -50,18 +53,34 @@ function intersectsFace(frustum, face) {
 
 export function createCameraRig(camera) {
   let state = copy(CAMERA_DEFAULTS);
+  let view = neutralView();
   const target = new THREE.Vector3();
+  const eyeOffset = new THREE.Vector3();
+  const aim = new THREE.Vector3();
+  const screenRight = new THREE.Vector3();
+  const screenUp = new THREE.Vector3();
   const frustum = new THREE.Frustum();
   const matrix = new THREE.Matrix4();
   function place(value) {
     const { yaw, pitch, distance } = value;
+    const effectiveDistance = distance * view.zoom;
     target.fromArray(value.target);
     camera.position.set(
-      target.x + Math.sin(yaw) * Math.cos(pitch) * distance,
-      target.y + Math.sin(pitch) * distance,
-      target.z + Math.cos(yaw) * Math.cos(pitch) * distance,
+      target.x + Math.sin(yaw) * Math.cos(pitch) * effectiveDistance,
+      target.y + Math.sin(pitch) * effectiveDistance,
+      target.z + Math.cos(yaw) * Math.cos(pitch) * effectiveDistance,
     );
     camera.lookAt(target);
+    const halfHeight = effectiveDistance * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    screenRight.set(1, 0, 0).applyQuaternion(camera.quaternion);
+    screenUp.set(0, 1, 0).applyQuaternion(camera.quaternion);
+    eyeOffset.copy(screenRight).multiplyScalar(view.x * halfHeight * camera.aspect * CURSOR_CAMERA_PARALLAX)
+      .addScaledVector(screenUp, -view.y * halfHeight * CURSOR_CAMERA_PARALLAX);
+    camera.position.add(eyeOffset);
+    // Let the focal point drift a fraction opposite the eye offset. The TV
+    // remains near center while moving subtly toward the cursor in the frame.
+    aim.copy(target).addScaledVector(eyeOffset, -.18);
+    camera.lookAt(aim);
     camera.updateMatrixWorld();
   }
   function safe(value) {
@@ -106,6 +125,23 @@ export function createCameraRig(camera) {
   return {
     getState: () => copy(state),
     setState,
+    setViewOffset(value) {
+      const desired = {
+        x: clamp(Number(value?.x), -1, 1),
+        y: clamp(Number(value?.y), -1, 1),
+        zoom: clamp(Number(value?.zoom), 1 - CURSOR_CAMERA_ZOOM, 1 + CURSOR_CAMERA_ZOOM),
+      };
+      if (![desired.x, desired.y, desired.zoom].every(Number.isFinite)) return false;
+      const previous = view;
+      view = desired;
+      if (!safe(state)) {
+        view = previous;
+        place(state);
+        return false;
+      }
+      place(state);
+      return true;
+    },
     resize() { setState(state); },
     orbit(dx, dy) { setState({ ...state, yaw: state.yaw - dx * .004, pitch: state.pitch + dy * .003 }); },
     zoom(factor) { setState({ ...state, distance: state.distance * factor }); },
@@ -114,6 +150,56 @@ export function createCameraRig(camera) {
       const scale = 2 * state.distance * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) / height;
       const offset = new THREE.Vector3(-dx * scale, dy * scale, 0).applyQuaternion(camera.quaternion);
       setState({ ...state, target: target.clone().add(offset).toArray() });
+    },
+  };
+}
+
+export function cursorCameraTarget(rect, clientX, clientY, viewportWidth, viewportHeight) {
+  if (!rect?.width || !rect?.height || ![clientX, clientY, viewportWidth, viewportHeight].every(Number.isFinite)) return neutralView();
+  const right = rect.left + rect.width, bottom = rect.top + rect.height;
+  const x = clamp((clientX - rect.left) / rect.width * 2 - 1, -1, 1);
+  const y = clamp((clientY - rect.top) / rect.height * 2 - 1, -1, 1);
+  const dx = Math.max(rect.left - clientX, 0, clientX - right);
+  const dy = Math.max(rect.top - clientY, 0, clientY - bottom);
+  const falloff = Math.max(1, Math.hypot(viewportWidth, viewportHeight) * .35);
+  const proximity = 1 - clamp(Math.hypot(dx, dy) / falloff, 0, 1);
+  return { x, y, zoom: 1 + CURSOR_CAMERA_ZOOM * (1 - 2 * proximity) };
+}
+
+export function attachCursorCamera(element, rig, onChange, environment = window) {
+  const listeners = new AbortController();
+  const options = { signal: listeners.signal };
+  const reducedMotion = environment.matchMedia?.('(prefers-reduced-motion: reduce)');
+  let current = neutralView(), goal = neutralView(), frame = null;
+  const requestFrame = callback => environment.requestAnimationFrame(callback);
+  function animate() {
+    frame = null;
+    for (const key of ['x', 'y', 'zoom']) current[key] = THREE.MathUtils.lerp(current[key], goal[key], .14);
+    const remaining = Math.max(Math.abs(current.x - goal.x), Math.abs(current.y - goal.y), Math.abs(current.zoom - goal.zoom));
+    if (remaining < .0001) current = { ...goal };
+    rig.setViewOffset(current);
+    onChange();
+    if (remaining >= .0001) frame = requestFrame(animate);
+  }
+  function move(goalView) {
+    goal = goalView;
+    if (frame === null) frame = requestFrame(animate);
+  }
+  function reset() { move(neutralView()); }
+  environment.addEventListener('pointermove', event => {
+    if (reducedMotion?.matches || (event.pointerType && event.pointerType !== 'mouse')) return;
+    move(cursorCameraTarget(element.getBoundingClientRect(), event.clientX, event.clientY,
+      environment.innerWidth, environment.innerHeight));
+  }, options);
+  environment.addEventListener('mouseout', event => { if (!event.relatedTarget) reset(); }, options);
+  environment.addEventListener('blur', reset, options);
+  return {
+    dispose() {
+      listeners.abort();
+      if (frame !== null) environment.cancelAnimationFrame(frame);
+      frame = null;
+      rig.setViewOffset(neutralView());
+      onChange();
     },
   };
 }

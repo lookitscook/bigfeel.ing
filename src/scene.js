@@ -16,7 +16,7 @@ try {
   const { createPostProcessing } = await import('./post-processing.js');
   const { createTVVideo } = await import('./tv-video.js');
   const { createEffectPanels } = await import('./effect-panels.js');
-  const { createCameraRig, attachCameraControls, CAMERA_DEFAULTS } = await import('./camera-controls.js');
+  const { createCameraRig, attachCameraControls, attachCursorCamera, CAMERA_DEFAULTS } = await import('./camera-controls.js');
   const { createScenePersistence, SCENE_DEFAULTS, STATE_APP, STATE_VERSION } = await import('./scene-state.js');
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(pageBackground);
@@ -350,6 +350,7 @@ try {
   }
   const resizeObserver=new ResizeObserver(resize);resizeObserver.observe(stage);if(cutout)resizeObserver.observe(cutout);if(cutoutControl)resizeObserver.observe(cutoutControl);resize();
   const cameraControls=attachCameraControls(renderer.domElement,cameraRig,()=>{invalidate();persistence?.scheduleSave();});
+  const cursorCamera=presentation?attachCursorCamera(renderer.domElement,cameraRig,invalidate):null;
   root.querySelector('[data-action="reset-view"]')?.addEventListener('click',()=>{cameraRig.setState(CAMERA_DEFAULTS);invalidate();});
   let prevTime=0,trainFrame=null;
   function placeWheels(){for(const w of wheels)w.hub.rotation.z=(wheelTravel/w.r)%(2*Math.PI);}
@@ -413,7 +414,7 @@ try {
     }
   }
   else persistence=createScenePersistence(root,getState,applyState);
-  renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();backgroundListeners.abort();persistence?.dispose();setTrainRunning(false);cameraControls?.dispose();resizeObserver.disconnect();tvVideo.dispose();panels.dispose();postProcessing.dispose();delete root.setAmbientLighting;delete root.setAmbientLightingMix;delete root.getAmbientLighting;delete root.setLampLighting;delete root.getLampLighting;delete root.setEmotionVideo;delete root.getEmotionVideo;message.hidden=false;message.textContent='The 3D view lost its graphics connection. Reload to restore the scene.';});
+  renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();backgroundListeners.abort();persistence?.dispose();setTrainRunning(false);cameraControls?.dispose();cursorCamera?.dispose();resizeObserver.disconnect();tvVideo.dispose();panels.dispose();postProcessing.dispose();delete root.setAmbientLighting;delete root.setAmbientLightingMix;delete root.getAmbientLighting;delete root.setLampLighting;delete root.getLampLighting;delete root.setEmotionVideo;delete root.getEmotionVideo;message.hidden=false;message.textContent='The 3D view lost its graphics connection. Reload to restore the scene.';});
   message.hidden=true;root.dataset.ready='true';root.dispatchEvent(new CustomEvent('scene-ready'));
 } catch(error) {
   message.hidden=false;message.textContent='The 3D scene could not start. It needs WebGL and the bundled app files.';

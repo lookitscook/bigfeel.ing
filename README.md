@@ -50,7 +50,9 @@ column’s 57ch maximum width.
 Desktop content keeps at least 24px of clearance from the intensity ring;
 mobile text scales modestly to retain the shorter book-like line length. Drag the
 Christmas image to orbit, Shift-drag to pan, and scroll or pinch to zoom, just
-as in the scene editor.
+as in the scene editor. With a mouse, the scene also makes a subtle, eased
+perspective shift toward the cursor and gently zooms in as the cursor approaches
+the image or out as it moves away. This presentation-only motion is not saved.
 
 The Christmas presentation uses the captured scene defaults without modifying
 saved editor settings. The logo's sphere follows the selector's current

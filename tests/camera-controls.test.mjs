@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../vendor/three.module.js';
-import { attachCameraControls, createCameraRig, CAMERA_DEFAULTS, CAMERA_DISTANCE_MIN } from '../src/camera-controls.js';
+import { attachCameraControls, createCameraRig, cursorCameraTarget, CAMERA_DEFAULTS, CAMERA_DISTANCE_MIN, CURSOR_CAMERA_ZOOM } from '../src/camera-controls.js';
 
 function fixture(aspect = 1.5) {
   const camera = new THREE.PerspectiveCamera(36, aspect, .02, 25);
@@ -62,17 +62,43 @@ test('zooming in can move to twice the previous maximum magnification', () => {
   assertRoomCoverage(camera);
 });
 
+test('cursor view offsets shift perspective without changing saved camera state', () => {
+  const { rig, camera } = fixture();
+  const before = rig.getState();
+  const position = camera.position.clone();
+  assert.equal(rig.setViewOffset({ x: 1, y: -1, zoom: 1 - CURSOR_CAMERA_ZOOM }), true);
+  assert.deepEqual(rig.getState(), before);
+  assert.ok(camera.position.distanceTo(position) > .01);
+  const projectedTarget = new THREE.Vector3(...before.target).project(camera);
+  assert.ok(projectedTarget.x > 0 && projectedTarget.y > 0);
+  assertRoomCoverage(camera);
+});
+
+test('cursor targets track the canvas and zoom according to its proximity', () => {
+  const rect = { left: 100, top: 100, width: 400, height: 225 };
+  assert.deepEqual(cursorCameraTarget(rect, 300, 212.5, 1000, 800), { x: 0, y: 0, zoom: 1 - CURSOR_CAMERA_ZOOM });
+  const corner = cursorCameraTarget(rect, 500, 325, 1000, 800);
+  assert.equal(corner.x, 1);
+  assert.equal(corner.y, 1);
+  assert.equal(corner.zoom, 1 - CURSOR_CAMERA_ZOOM);
+  const far = cursorCameraTarget(rect, 1000, 800, 1000, 800);
+  assert.equal(far.x, 1);
+  assert.equal(far.y, 1);
+  assert.equal(far.zoom, 1 + CURSOR_CAMERA_ZOOM);
+});
+
 test('room stays covered at extreme orbit, zoom, pan, import, and resized views', () => {
   const { rig, camera } = fixture();
   let seed = 123456;
   const random = () => ((seed = (1664525 * seed + 1013904223) >>> 0) / 4294967296);
-  for (let i = 0; i < 500; i++) {
-    switch (i % 5) {
+  for (let i = 0; i < 600; i++) {
+    switch (i % 6) {
       case 0: rig.orbit((random() - .5) * 3000, (random() - .5) * 2000); break;
       case 1: rig.pan((random() - .5) * 10000, (random() - .5) * 10000, 600); break;
       case 2: rig.zoom(random() < .5 ? .001 : 1000); break;
       case 3: rig.setState({ yaw: random() * 20 - 10, pitch: random() * 20 - 10, distance: random() * 100, target: [random() * 20 - 10, random() * 20 - 10, random() * 20 - 10] }); break;
       case 4: camera.aspect = [.5, 1, 1.5, 2, 2.5][i % 7 % 5]; camera.updateProjectionMatrix(); rig.resize(); break;
+      case 5: rig.setViewOffset({ x: random() * 2 - 1, y: random() * 2 - 1, zoom: 1 + (random() * 2 - 1) * CURSOR_CAMERA_ZOOM }); break;
     }
     assertRoomCoverage(camera);
   }

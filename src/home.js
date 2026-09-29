@@ -3,6 +3,7 @@ import { HOME_DEBUG_ENABLED } from './home-debug-state.js';
 import { renderHomeCopy } from './home-copy.js';
 import { createEmotionAutoplay } from './home-emotion-autoplay.js';
 import { HATCH_SLIDERS } from './cross-hatch.js';
+import { createLiveFavicon } from './live-favicon.js';
 import { LogoSphere } from './logo-sphere.js';
 import { LOGO_DEFAULTS, readLogoSettings } from './logo-settings.js';
 import { WORDMARK } from './logo-wordmark.js';
@@ -45,7 +46,9 @@ window.addEventListener('pagehide', event => {
   if (!event.persisted) { emotionAutoplay.stop(); lampListeners.abort(); }
 }, { signal: lampListeners.signal });
 try {
-  const sphere = new LogoSphere(document.getElementById('home-logo-sphere'));
+  const logoCanvas = document.getElementById('home-logo-sphere');
+  const favicon = createLiveFavicon(document.getElementById('home-favicon'), document);
+  const sphere = new LogoSphere(logoCanvas);
   const listeners = new AbortController();
   let settings, debugControls;
   function loadSettings() {
@@ -57,6 +60,7 @@ try {
     try {
       sphere.setColorSource(event.detail.canvas, event.detail.crop);
       sphere.render(settings, .35);
+      favicon.update(logoCanvas);
     } catch (error) {
       // A logo graphics failure must not interrupt the sphere selector.
       listeners.abort();

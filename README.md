@@ -57,7 +57,8 @@ the image or out as it moves away. This presentation-only motion is not saved.
 The Christmas presentation uses the captured scene defaults without modifying
 saved editor settings. The logo's sphere follows the selector's current
 front-facing color gradient live, before sepia and without mesh lines, points,
-or labels. When an emotion settles under the reticle, the homepage body switches
+or labels. The page favicon follows the same animated, sepia-treated sphere.
+When an emotion settles under the reticle, the homepage body switches
 to its four-paragraph “Big Feeling copy” from the Emotion Cue Matrix at the same
 time as the television changes videos. Characters briefly scramble through a
 seeded set of unstable glyphs before progressively resolving into the new copy.

@@ -224,8 +224,7 @@ try {
   // Painted incandescent-glass colors: ruby, amber-orange, golden yellow,
   // deep evergreen and cobalt blue, with soft colored halos.
   const bulbColors=['#e53925','#ed832c','#e7b83e','#339458','#396dbc'];
-  const lightMaterials=bulbColors.map(color=>new THREE.MeshBasicMaterial({color:new THREE.Color(color).multiplyScalar(1.9),toneMapped:false}));
-  const spriteMaterials=bulbColors.map(color=>new THREE.SpriteMaterial({map:glowMap,color:new THREE.Color(color).multiplyScalar(1.12),blending:THREE.AdditiveBlending,depthWrite:false,depthTest:true,toneMapped:false,opacity:.95}));
+  const treeBulbs=[];
   const wirePts=[];
   // Follow the actual outer boughs, seated just inside their needle tips.
   // Irregularity comes from the height of each pass, not an outward drape.
@@ -261,10 +260,14 @@ try {
     const direction=V(Math.sin(angle),random()*2-1,Math.cos(angle)).normalize();
     const assembly=new THREE.Group();assembly.name='Vintage Christmas bulb';assembly.position.copy(p);assembly.quaternion.setFromUnitVectors(V(0,1,0),direction);tree.add(assembly);
     const socket=mesh(socketGeometry,socketMaterial,assembly);socket.position.y=-.004;socket.castShadow=false;
-    const o=mesh(bulbGeometry,lightMaterials[ci],assembly);o.castShadow=false;o.receiveShadow=false;
+    const bulbMaterial=new THREE.MeshBasicMaterial({color:new THREE.Color(bulbColors[ci]).multiplyScalar(1.9),toneMapped:false});
+    const o=mesh(bulbGeometry,bulbMaterial,assembly);o.castShadow=false;o.receiveShadow=false;
     const center=p.clone().addScaledVector(direction,.016);
-    const sp=new THREE.Sprite(spriteMaterials[ci]);sp.position.copy(center);const halo=.155+random()*.028;sp.scale.set(halo,halo,1);tree.add(sp);
-    if(i%17===0){const pl=new THREE.PointLight(bulbColors[ci],.16,.8,2);pl.position.copy(center);tree.add(pl);}
+    const spriteMaterial=new THREE.SpriteMaterial({map:glowMap,color:new THREE.Color(bulbColors[ci]).multiplyScalar(1.12),blending:THREE.AdditiveBlending,depthWrite:false,depthTest:true,toneMapped:false,opacity:.95});
+    const sp=new THREE.Sprite(spriteMaterial);sp.position.copy(center);const halo=.155+random()*.028;sp.scale.set(halo,halo,1);tree.add(sp);
+    let point=null;
+    if(i%17===0){point=new THREE.PointLight(bulbColors[ci],.16,.8,2);point.position.copy(center);tree.add(point);}
+    treeBulbs.push({bulbMaterial,spriteMaterial,point});
   }
 
   // A five-pointed gold topper with raised centers and crisp triangular facets.
@@ -310,11 +313,16 @@ try {
   const ambientLighting=createAmbientLighting({hemisphere,key,fill,invalidate});
   const {createLampLighting}=await import('./lamp-lighting.js');
   const lampLighting=createLampLighting({point:lamplight,wash,coverMaterial:shadeMat,bulbMaterial,invalidate});
+  const {createTreeLighting}=await import('./tree-lighting.js');
+  const treeLighting=createTreeLighting({bulbs:treeBulbs,invalidate,random,
+    maxStagger:window.matchMedia('(prefers-reduced-motion: reduce)').matches?0:undefined});
   root.setAmbientLighting=configuration=>ambientLighting.set(configuration);
   root.setAmbientLightingMix=value=>ambientLighting.setMix(value);
   root.getAmbientLighting=()=>ambientLighting.getState();
   root.setLampLighting=value=>lampLighting.set(value);
   root.getLampLighting=()=>lampLighting.get();
+  root.setTreeLighting=sequence=>treeLighting.set(sequence);
+  root.getTreeLighting=()=>treeLighting.get();
   const tvVideo=createTVVideo({src:TV_VIDEO_URL,screen:glass,root,invalidate});
   root.setEmotionVideo=name=>{
     const source=emotionVideoUrl(name);
@@ -414,7 +422,7 @@ try {
     }
   }
   else persistence=createScenePersistence(root,getState,applyState);
-  renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();backgroundListeners.abort();persistence?.dispose();setTrainRunning(false);cameraControls?.dispose();cursorCamera?.dispose();resizeObserver.disconnect();tvVideo.dispose();panels.dispose();postProcessing.dispose();delete root.setAmbientLighting;delete root.setAmbientLightingMix;delete root.getAmbientLighting;delete root.setLampLighting;delete root.getLampLighting;delete root.setEmotionVideo;delete root.getEmotionVideo;message.hidden=false;message.textContent='The 3D view lost its graphics connection. Reload to restore the scene.';});
+  renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();backgroundListeners.abort();persistence?.dispose();setTrainRunning(false);cameraControls?.dispose();cursorCamera?.dispose();resizeObserver.disconnect();treeLighting.dispose();tvVideo.dispose();panels.dispose();postProcessing.dispose();delete root.setAmbientLighting;delete root.setAmbientLightingMix;delete root.getAmbientLighting;delete root.setLampLighting;delete root.getLampLighting;delete root.setTreeLighting;delete root.getTreeLighting;delete root.setEmotionVideo;delete root.getEmotionVideo;message.hidden=false;message.textContent='The 3D view lost its graphics connection. Reload to restore the scene.';});
   message.hidden=true;root.dataset.ready='true';root.dispatchEvent(new CustomEvent('scene-ready'));
 } catch(error) {
   message.hidden=false;message.textContent='The 3D scene could not start. It needs WebGL and the bundled app files.';

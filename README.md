@@ -98,6 +98,19 @@ scene.setAmbientLightingMix(.5);
 `keyElevation` from 5–85°. Values are clamped to these ranges. Partial current
 or target updates preserve their other values.
 
+On the homepage, each emotion uses its lighting description plus brightness,
+temperature, ambient level, fill balance, shadow contrast, and shadow softness
+from `Emotion Cues!H2:N65`. Key direction and elevation remain at the scene's
+original authored values. While the globe moves, the scene fades toward the
+nearest surface emotion; once selection settles, it finishes on that emotion's
+lighting state.
+
+The tree follows `Emotion Cues!D2:D65`. Each emotion supplies a repeating
+eight-bulb DMX RGB sequence; the scene repeats it across all 155 bulbs and
+updates individual bulbs at randomized delays within a 180 ms window instead
+of crossfading the whole strand in sync. The scene element exposes
+`setTreeLighting(sequence)` and `getTreeLighting()` after `data-ready` is true.
+
 The scene also exposes `setLampLighting(brightness)` and `getLampLighting()`.
 Brightness is clamped to 0–1 and linearly controls the lamp's point light,
 secondary wash, shade emission, and visible bulb. On the homepage this is fed

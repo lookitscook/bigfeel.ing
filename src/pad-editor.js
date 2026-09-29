@@ -296,6 +296,7 @@ function createSelector() {
     knobElement.style.width = knobElement.style.height = `${knobSize}px`;
     const values = dirToPad(selectedDirection, intensity);
     const surface = dirToPad(selectedDirection, 1);
+    const nearestEmotion = nearestPadEmotion(surface)?.name ?? null;
     const label = padEmotion(values);
     sphere.material.uniforms.intensity.value = intensity;
     marker.material.color.setRGB(...padColor(values.p, values.a, values.d), THREE.SRGBColorSpace);
@@ -309,7 +310,7 @@ function createSelector() {
     const format = value => `${value >= 0 ? '+' : ''}${value.toFixed(2)}`;
     padEl.textContent = `P ${format(values.p)} · A ${format(values.a)} · D ${format(values.d)} · ${Math.round(intensity * 100)}%`;
     stage.dispatchEvent(new CustomEvent('pad-selection-change', {
-      detail: { label, values, surface, brightness: padDominanceBrightness(surface.d) },
+      detail: { label, nearestEmotion, values, surface, brightness: padDominanceBrightness(surface.d) },
     }));
     if (settled && selectedIndex >= 0 && settledEmotion !== label) {
       settledEmotion = label;

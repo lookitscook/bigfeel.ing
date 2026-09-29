@@ -215,6 +215,8 @@ test('emotion selection events wait for the picker snap to settle', async () => 
   const app = await selector();
   const transitions = [];
   const selected = [];
+  const highlights = [];
+  app.elements['pad-stage'].addEventListener('pad-selection-change', event => highlights.push(event.detail.nearestEmotion));
   app.elements['pad-stage'].addEventListener('pad-emotion-transition', event => transitions.push({
     name: event.detail.name, duration: event.detail.duration, startedAt: event.detail.startedAt,
   }));
@@ -224,6 +226,7 @@ test('emotion selection events wait for the picker snap to settle', async () => 
   assert.equal(app.elements['pad-stage'].selectPadEmotion('Sad'), true);
   assert.deepEqual(transitions, [{ name: 'Sad', duration: 420, startedAt: 0 }]);
   app.tick(210);
+  assert.ok(highlights.every(name => model.PAD_EMOTIONS.some(([emotion]) => emotion === name)));
   assert.deepEqual(selected, []);
   app.tick(420);
   assert.deepEqual(selected, ['Sad']);

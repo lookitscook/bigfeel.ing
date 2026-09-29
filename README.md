@@ -68,6 +68,9 @@ the globe's 420 ms selection motion so both finish together. Reduced-motion
 preferences produce an instant swap instead. Its saved soft edge and cross-hatch settings
 then apply to that source; the logo retains its own sepia filter. Headings use
 locally bundled Literata; body copy and navigation use locally bundled Inter.
+On the homepage, the globe animates to a random emotion on load and chooses a
+new, non-repeating emotion every 6.5 seconds until the visitor interacts with
+the selector.
 
 The Christmas scene element exposes ambient-lighting methods after its
 `data-ready` attribute becomes `true`. Supply separate `current` and `target`

@@ -483,11 +483,20 @@ function createSelector() {
   resize();
   message.hidden = true;
   if (neutralButton) neutralButton.disabled = false;
+  stage.selectPadEmotion = name => {
+    const row = PAD_EMOTIONS.find(([emotionName]) => emotionName === name);
+    if (!row) return false;
+    const [emotionName, p, a, d] = row;
+    snapToEmotion({ name: emotionName, p, a, d });
+    return true;
+  };
+  stage.dispatchEvent(new CustomEvent('pad-selector-ready'));
 
   function dispose() {
     if (disposed) return;
     disposed = true;
     delete stage.requestPadColorFrame;
+    delete stage.selectPadEmotion;
     snap = null;
     listeners.abort(); resizeObserver.disconnect();
     if (frame !== null) cancelAnimationFrame(frame);

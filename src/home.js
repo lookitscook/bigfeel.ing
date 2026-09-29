@@ -1,11 +1,13 @@
 import './home-layout.js';
 import { HOME_DEBUG_ENABLED } from './home-debug-state.js';
 import { renderHomeCopy } from './home-copy.js';
+import { createEmotionAutoplay } from './home-emotion-autoplay.js';
 import { HATCH_SLIDERS } from './cross-hatch.js';
 import { LogoSphere } from './logo-sphere.js';
 import { LOGO_DEFAULTS, readLogoSettings } from './logo-settings.js';
 import { WORDMARK } from './logo-wordmark.js';
 import { LOGO_STORAGE_KEY, readPageBackground, applyPageBackground } from './page-background.js';
+import { PAD_EMOTIONS } from './pad-model.js';
 
 document.getElementById('home-wordmark').innerHTML = WORDMARK;
 applyPageBackground(readPageBackground());
@@ -15,6 +17,11 @@ const homeBody = document.querySelector('.home-body');
 const lampListeners = new AbortController();
 let lampBrightness = .5;
 let selectedEmotion = 'Inspired';
+const emotionAutoplay = createEmotionAutoplay({
+  emotions: PAD_EMOTIONS.map(([name]) => name),
+  initial: selectedEmotion,
+  select: name => selector.selectPadEmotion?.(name),
+});
 function syncLamp() { scene.setLampLighting?.(lampBrightness); }
 function syncEmotionVideo() { scene.setEmotionVideo?.(selectedEmotion); }
 selector.addEventListener('pad-selection-change', event => {
@@ -28,9 +35,14 @@ selector.addEventListener('pad-emotion-selected', event => {
   selectedEmotion = event.detail.name;
   syncEmotionVideo();
 }, { signal: lampListeners.signal });
+selector.addEventListener('pad-selector-ready', () => emotionAutoplay.start(), { signal: lampListeners.signal });
+for (const type of ['pointerdown', 'keydown', 'change']) {
+  selector.addEventListener(type, () => emotionAutoplay.stop(), { signal: lampListeners.signal });
+}
+if (typeof selector.selectPadEmotion === 'function') emotionAutoplay.start();
 scene.addEventListener('scene-ready', () => { syncLamp(); syncEmotionVideo(); }, { signal: lampListeners.signal });
 window.addEventListener('pagehide', event => {
-  if (!event.persisted) lampListeners.abort();
+  if (!event.persisted) { emotionAutoplay.stop(); lampListeners.abort(); }
 }, { signal: lampListeners.signal });
 try {
   const sphere = new LogoSphere(document.getElementById('home-logo-sphere'));

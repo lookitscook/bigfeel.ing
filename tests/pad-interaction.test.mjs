@@ -220,8 +220,8 @@ test('emotion selection events wait for the picker snap to settle', async () => 
   }));
   app.elements['pad-stage'].addEventListener('pad-emotion-selected', event => selected.push(event.detail.name));
   const picker = app.elements['pad-landmark-picker'];
-  picker.value = String(model.PAD_EMOTIONS.findIndex(([name]) => name === 'Sad'));
-  picker.fire('change');
+  assert.equal(app.elements['pad-stage'].selectPadEmotion('not-an-emotion'), false);
+  assert.equal(app.elements['pad-stage'].selectPadEmotion('Sad'), true);
   assert.deepEqual(transitions, [{ name: 'Sad', duration: 420, startedAt: 0 }]);
   app.tick(210);
   assert.deepEqual(selected, []);

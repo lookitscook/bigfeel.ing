@@ -106,7 +106,7 @@ nearest surface emotion; once selection settles, it finishes on that emotion's
 lighting state.
 
 The tree follows `Emotion Cues!D2:D65`. Each emotion supplies a repeating
-eight-bulb DMX RGB sequence; the scene repeats it across all 155 bulbs and
+five-bulb DMX RGB sequence; the scene repeats it across all 155 bulbs and
 updates individual bulbs at randomized delays within a 180 ms window instead
 of crossfading the whole strand in sync. The scene element exposes
 `setTreeLighting(sequence)` and `getTreeLighting()` after `data-ready` is true.

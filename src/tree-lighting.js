@@ -3,8 +3,8 @@ import * as THREE from '../vendor/three.module.js';
 export const TREE_BULB_STAGGER = 180;
 
 export function normalizeDmxRgbSequence(sequence) {
-  if (!Array.isArray(sequence) || sequence.length !== 8) {
-    throw new TypeError('Tree lighting requires an eight-bulb RGB sequence.');
+  if (!Array.isArray(sequence) || sequence.length !== 5) {
+    throw new TypeError('Tree lighting requires a five-bulb RGB sequence.');
   }
   return sequence.map((rgb, bulbIndex) => {
     if (!Array.isArray(rgb) || rgb.length !== 3 || rgb.some(value => !Number.isInteger(value) || value < 0 || value > 255)) {

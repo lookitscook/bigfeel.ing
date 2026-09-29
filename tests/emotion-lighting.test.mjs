@@ -31,7 +31,7 @@ test('background lighting retains exact sheet values', () => {
     description, brightness, temperature, ambientLevel, fillBalance, shadowContrast, shadowSoftness,
   });
   assert.deepEqual(sheetFields(EMOTION_LIGHTING.Alert), {
-    description: 'A subdued icy blue-white background lets the always-bright blue, cyan tree hues lead. Crisp shadows reinforce vigilance.',
+    description: "A subdued icy blue-white background supports the always-bright blue, cyan, and red five-bulb motif. Crisp shadows reinforce vigilance.",
     brightness: 1.9,
     temperature: 8000,
     ambientLevel: .4,
@@ -40,7 +40,7 @@ test('background lighting retains exact sheet values', () => {
     shadowSoftness: 4,
   });
   assert.deepEqual(sheetFields(EMOTION_LIGHTING.Understanding), {
-    description: 'A subdued cool-neutral background lets the always-bright cyan, coral, amber tree hues lead. Open shadows serve both colors.',
+    description: "A subdued cool-neutral background supports the always-bright cyan, coral, and amber five-bulb motif. Open shadows serve all three hues.",
     brightness: 1.5,
     temperature: 5900,
     ambientLevel: .8,

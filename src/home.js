@@ -1,5 +1,6 @@
 import './home-layout.js';
 import { HOME_DEBUG_ENABLED } from './home-debug-state.js';
+import { renderHomeCopy } from './home-copy.js';
 import { HATCH_SLIDERS } from './cross-hatch.js';
 import { LogoSphere } from './logo-sphere.js';
 import { LOGO_DEFAULTS, readLogoSettings } from './logo-settings.js';
@@ -10,6 +11,7 @@ document.getElementById('home-wordmark').innerHTML = WORDMARK;
 applyPageBackground(readPageBackground());
 const scene = document.getElementById('christmas-credenza-tight-3d');
 const selector = document.getElementById('pad-stage');
+const homeBody = document.querySelector('.home-body');
 const lampListeners = new AbortController();
 let lampBrightness = .5;
 let selectedEmotion = 'Inspired';
@@ -21,6 +23,7 @@ selector.addEventListener('pad-selection-change', event => {
 }, { signal: lampListeners.signal });
 selector.addEventListener('pad-emotion-selected', event => {
   selectedEmotion = event.detail.name;
+  renderHomeCopy(homeBody, selectedEmotion);
   syncEmotionVideo();
 }, { signal: lampListeners.signal });
 scene.addEventListener('scene-ready', () => { syncLamp(); syncEmotionVideo(); }, { signal: lampListeners.signal });

@@ -55,8 +55,10 @@ as in the scene editor.
 The Christmas presentation uses the captured scene defaults without modifying
 saved editor settings. The logo's sphere follows the selector's current
 front-facing color gradient live, before sepia and without mesh lines, points,
-or labels. Its saved soft edge and cross-hatch settings then apply to that source;
-the logo retains its own sepia filter. Headings use
+or labels. When an emotion settles under the reticle, the homepage body switches
+to its four-paragraph “Big Feeling copy” from the Emotion Cue Matrix at the same
+time as the television changes videos. Its saved soft edge and cross-hatch settings
+then apply to that source; the logo retains its own sepia filter. Headings use
 locally bundled Literata; body copy and navigation use locally bundled Inter.
 
 The Christmas scene element exposes ambient-lighting methods after its

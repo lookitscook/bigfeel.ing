@@ -2,6 +2,7 @@ import { HOME_DEBUG_ENABLED, HOME_SCENE_STORAGE_KEY, HOME_SCENE_SETTINGS_VERSION
 import { LOGO_STORAGE_KEY, readPageBackground, applyPageBackground } from './page-background.js';
 import { sceneCircleCutout } from './scene-cutout.js';
 import { emotionVideoUrl, randomEmotionVideo } from './emotion-videos.js';
+import { homeHatchScale } from './home-hatch-scale.js';
 const pageBackground = applyPageBackground(readPageBackground());
 const root = document.getElementById('christmas-credenza-tight-3d');
 const stage = root.querySelector('.scene-stage');
@@ -309,6 +310,9 @@ try {
   const drawingSize=new THREE.Vector2();
   function render(){requested=false;postProcessing.render(scene,camera);}
   function invalidate(){if(!requested){requested=true;requestAnimationFrame(render);}}
+  function syncResponsiveHatchScale(){
+    if(presentation)postProcessing.setHatchParameter('scale',homeHatchScale(stage.clientWidth));
+  }
   const {createAmbientLighting}=await import('./ambient-lighting.js');
   const ambientLighting=createAmbientLighting({hemisphere,key,fill,invalidate});
   const {createLampLighting}=await import('./lamp-lighting.js');
@@ -336,6 +340,7 @@ try {
     const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;
     renderer.setSize(w,h,false);renderer.getDrawingBufferSize(drawingSize);
     postProcessing.setSize(drawingSize.x,drawingSize.y);
+    syncResponsiveHatchScale();
     if(cutout){
       const feather=parseFloat(getComputedStyle(cutout).getPropertyValue('--scene-cutout-feather'));
       const circleRect=cutout.getBoundingClientRect();
@@ -370,7 +375,7 @@ try {
   function applyState(state){
     cameraRig.setState(state.camera);
     trainS=state.train.position%loopLength;wheelTravel=state.train.wheelTravel;placeTrain();placeWheels();setTrainRunning(state.train.running);
-    tvVideo.setState(state);postProcessing.setState(state);panels.setState(state.panels);invalidate();
+    tvVideo.setState(state);postProcessing.setState(state);syncResponsiveHatchScale();panels.setState(state.panels);invalidate();
   }
   // The homepage shares the scene defaults without saving over the editor.
   if(presentation){
@@ -394,7 +399,8 @@ try {
       createHomeDebugControls({
         name:'christmas', title:'Christmas crosshatch', signal:backgroundListeners.signal,
         values:{...state.hatch,enabled:state.effect==='cross-hatch'},
-        controls:[{key:'enabled',label:'Crosshatch enabled',type:'checkbox'},...SCENE_HATCH_SLIDERS],
+        controls:[{key:'enabled',label:'Crosshatch enabled',type:'checkbox'},
+          ...SCENE_HATCH_SLIDERS.filter(({key})=>key!=='scale')],
         onChange(key,value){
           const next=postProcessing.getState();
           if(key==='enabled')next.effect=value?'cross-hatch':'none';

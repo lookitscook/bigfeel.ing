@@ -63,12 +63,21 @@ export function createPostProcessing(renderer, root, invalidate, panels, backgro
     for (const [key, update] of controls) update(values[key] ?? SCENE_HATCH_DEFAULTS[key]);
     invalidate();
   }
+  function setHatchParameter(key, value) {
+    const update = controls.get(key);
+    const slider = SCENE_HATCH_SLIDERS.find(control => control.key === key);
+    if (!update || !slider || !Number.isFinite(value)) return false;
+    update(Math.max(slider.min, Math.min(slider.max, value)));
+    invalidate();
+    return true;
+  }
   root.querySelector('[data-action="reset-hatch"]')?.addEventListener('click', () => setParameters(SCENE_HATCH_DEFAULTS));
   if (select) select.disabled = false;
 
   return {
     getState() { return { effect: active ? 'cross-hatch' : 'none', hatch: { ...params } }; },
     setState(state) { setParameters(state.hatch); setEffect(state.effect); },
+    setHatchParameter,
     setCircleCutout(value) {
       circleCutout = value;
       effect?.setCircleCutout(value);

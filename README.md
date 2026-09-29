@@ -126,6 +126,11 @@ separately for the homepage. Changes update immediately and survive reloads,
 including visits without the debug parameter. Controls are unavailable in
 production builds.
 
+The homepage Christmas crosshatch scale follows the rendered image width: it is
+2.0 through 400 CSS pixels, interpolates linearly from 2.0 to 1.5 between 400
+and 480 pixels, and remains 1.5 at desktop sizes. Device-pixel ratio does not
+change that visual scale.
+
 Layout and placeholder copy: `home/index.html` and `src/home.css`. This route is
 included in the normal Vite build; it does not generate standalone HTML editions.
 

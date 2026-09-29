@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../vendor/three.module.js';
-import { attachCameraControls, createCameraRig, CAMERA_DEFAULTS } from '../src/camera-controls.js';
+import { attachCameraControls, createCameraRig, CAMERA_DEFAULTS, CAMERA_DISTANCE_MIN } from '../src/camera-controls.js';
 
 function fixture(aspect = 1.5) {
   const camera = new THREE.PerspectiveCamera(36, aspect, .02, 25);
@@ -51,6 +51,14 @@ test('an unobstructed oblique imported view is restored exactly', () => {
   const state = { yaw: .3, pitch: .35, distance: 3.8, target: [.4, 1.45, 0] };
   rig.setState(state);
   assert.deepEqual(rig.getState(), state);
+  assertRoomCoverage(camera);
+});
+
+test('zooming in can move to twice the previous maximum magnification', () => {
+  const { rig, camera } = fixture();
+  rig.zoom(.001);
+  assert.equal(rig.getState().distance, CAMERA_DISTANCE_MIN);
+  assert.equal(CAMERA_DISTANCE_MIN, .7);
   assertRoomCoverage(camera);
 });
 

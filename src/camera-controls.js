@@ -4,6 +4,8 @@ export const CAMERA_DEFAULTS = Object.freeze({
   yaw: -0.5231882112845768, pitch: 0.12120312500000002, distance: 1.8825519019374903,
   target: Object.freeze([0.0759447936460346, 1.263378774797568, 0.08526518192651969]),
 });
+export const CAMERA_DISTANCE_MIN = 0.7;
+export const CAMERA_DISTANCE_MAX = 4.8;
 const clamp = THREE.MathUtils.clamp;
 const copy = state => ({ ...state, target: [...state.target] });
 
@@ -72,7 +74,7 @@ export function createCameraRig(camera) {
   function setState(value) {
     const desired = {
       yaw: clamp(value.yaw, -1.1, 1.1), pitch: clamp(value.pitch, .05, .92),
-      distance: clamp(value.distance, 1.7, 4.8),
+      distance: clamp(value.distance, CAMERA_DISTANCE_MIN, CAMERA_DISTANCE_MAX),
       target: value.target.map((n, i) => clamp(n, i === 2 ? -.3 : -5, 5)),
     };
     if (![desired.yaw, desired.pitch, desired.distance, ...desired.target].every(Number.isFinite)) return;
@@ -80,7 +82,7 @@ export function createCameraRig(camera) {
       // The stage normally stays 3:2. A narrower fallback also handles a
       // different aspect ratio if the layout is changed in the future.
       state = copy(CAMERA_DEFAULTS);
-      state.distance = 1.7;
+      state.distance = CAMERA_DISTANCE_MIN;
     }
     if (safe(desired)) state = desired;
     else {

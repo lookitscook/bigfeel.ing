@@ -1,5 +1,5 @@
 import { CRT_CONTROLS, CRT_DEFAULTS } from './crt-shader.js';
-import { CAMERA_DEFAULTS } from './camera-controls.js';
+import { CAMERA_DEFAULTS, CAMERA_DISTANCE_MIN, CAMERA_DISTANCE_MAX } from './camera-controls.js';
 import { HATCH_FIXED_PARAMETERS, SCENE_HATCH_DEFAULTS, SCENE_HATCH_SLIDERS } from './cross-hatch.js';
 
 export const STATE_APP = 'christmas-credenza';
@@ -59,7 +59,7 @@ export function validateSceneState(value) {
     camera: {
       yaw: number(camera.yaw, 'camera.yaw', -1.1, 1.1),
       pitch: number(camera.pitch, 'camera.pitch', .05, .92),
-      distance: number(camera.distance, 'camera.distance', 1.7, 4.8),
+      distance: number(camera.distance, 'camera.distance', CAMERA_DISTANCE_MIN, CAMERA_DISTANCE_MAX),
       target: camera.target.map((n, axis) => number(n, 'camera.target', axis === 2 ? -.3 : -5, 5)),
     },
     train: { running: boolean(train.running, 'train.running'), position: number(train.position, 'train.position', 0), wheelTravel: number(train.wheelTravel, 'train.wheelTravel', 0) },

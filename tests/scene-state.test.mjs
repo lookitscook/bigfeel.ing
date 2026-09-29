@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { CAMERA_DEFAULTS } from '../src/camera-controls.js';
+import { CAMERA_DEFAULTS, CAMERA_DISTANCE_MIN } from '../src/camera-controls.js';
 import { CRT_DEFAULTS } from '../src/crt-shader.js';
 import { SCENE_HATCH_DEFAULTS } from '../src/cross-hatch.js';
 import { STATE_APP, STATE_VERSION, STATE_COOKIE, SCENE_DEFAULTS, MAX_STATE_BYTES, parseSceneState, validateSceneState, readStateCookie, writeStateCookie, createScenePersistence } from '../src/scene-state.js';
@@ -52,6 +52,8 @@ test('invalid imports are rejected and numeric limits are normalized', () => {
     assert.throws(() => validateSceneState(state));
   }
   const state = fixture();
+  state.camera.distance = 0;
+  assert.equal(validateSceneState(state).camera.distance, CAMERA_DISTANCE_MIN);
   state.camera.distance = 1000;
   state.crt.parameters.brightness = 99;
   state.hatch.scale = -.2;

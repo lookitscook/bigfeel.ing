@@ -1,6 +1,7 @@
 import { CRT_CONTROLS, CRT_DEFAULTS } from './crt-shader.js';
 import { CAMERA_DEFAULTS, CAMERA_DISTANCE_MIN, CAMERA_DISTANCE_MAX } from './camera-controls.js';
 import { HATCH_FIXED_PARAMETERS, SCENE_HATCH_DEFAULTS, SCENE_HATCH_SLIDERS } from './cross-hatch.js';
+import { BACKGROUND_BRIGHTNESS_DEFAULT } from './background-brightness.js';
 
 export const STATE_APP = 'christmas-credenza';
 export const STATE_VERSION = 1;
@@ -13,6 +14,7 @@ export const SCENE_DEFAULTS = Object.freeze({
   app: STATE_APP, version: STATE_VERSION, camera: CAMERA_DEFAULTS,
   train: Object.freeze({ running: true, position: 4.721212105999891, wheelTravel: 350.46514699972056 }),
   tv: Object.freeze({ enabled: true, currentTime: 4.445289 }),
+  backgroundBrightness: BACKGROUND_BRIGHTNESS_DEFAULT,
   crt: Object.freeze({ enabled: true, parameters: CRT_DEFAULTS }),
   effect: 'cross-hatch', hatch: SCENE_HATCH_DEFAULTS,
   panels: Object.freeze({ crt: false, hatch: true }),
@@ -64,6 +66,9 @@ export function validateSceneState(value) {
     },
     train: { running: boolean(train.running, 'train.running'), position: number(train.position, 'train.position', 0), wheelTravel: number(train.wheelTravel, 'train.wheelTravel', 0) },
     tv: { enabled: boolean(tv.enabled, 'tv.enabled'), currentTime: number(tv.currentTime, 'tv.currentTime', 0) },
+    backgroundBrightness: value.backgroundBrightness === undefined
+      ? BACKGROUND_BRIGHTNESS_DEFAULT
+      : number(value.backgroundBrightness, 'backgroundBrightness', 0, 1),
     crt: { enabled: boolean(crt.enabled, 'crt.enabled'), parameters: parameters(crt.parameters, CRT_CONTROLS, 'CRT') },
     effect: value.effect,
     hatch: { ...parameters(sceneHatch, SCENE_HATCH_SLIDERS, 'cross-hatch'), ...HATCH_FIXED_PARAMETERS },

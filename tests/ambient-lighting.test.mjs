@@ -65,3 +65,24 @@ test('partial updates preserve prior values and public ranges are clamped', () =
   assert.throws(() => controller.set({ mix: NaN }), /mix/);
   assert.throws(() => controller.set({ current: { brightness: 'bright' } }), /brightness/);
 });
+
+test('background brightness re-resolves lights without changing or compounding base states', () => {
+  const { hemisphere, key, fill, controller } = fixture();
+  const current = { ...AMBIENT_LIGHTING_DEFAULTS, brightness: 1.4, temperature: 5100 };
+  const target = { ...AMBIENT_LIGHTING_DEFAULTS, brightness: .8, ambientLevel: .7 };
+  controller.set({ current, target, mix: .35 });
+  const baseState = controller.getState();
+  controller.setBackgroundBrightness(0);
+  const dark = [hemisphere.intensity, key.intensity, fill.intensity];
+  assert.deepEqual(controller.getState(), baseState);
+  assert.equal(controller.getBackgroundBrightness(), 0);
+  controller.setBackgroundBrightness(.5);
+  const neutral = [hemisphere.intensity, key.intensity, fill.intensity];
+  assert.deepEqual(controller.getState(), baseState);
+  assert.ok(neutral.every((value, index) => value > dark[index]));
+  controller.setBackgroundBrightness(2);
+  assert.equal(controller.getBackgroundBrightness(), 1);
+  controller.setBackgroundBrightness(.5);
+  assert.deepEqual(controller.getState(), baseState, 'repeated changes transform each base exactly once');
+  assert.throws(() => controller.setBackgroundBrightness(Infinity), /finite/);
+});

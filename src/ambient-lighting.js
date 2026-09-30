@@ -1,4 +1,6 @@
 import * as THREE from '../vendor/three.module.js';
+import { BACKGROUND_BRIGHTNESS_DEFAULT, backgroundLightingFor,
+  normalizeBackgroundBrightness } from './background-brightness.js';
 
 const KEY_POSITION = Object.freeze([-1.5, 3.4, 3.3]);
 const KEY_DISTANCE = Math.hypot(...KEY_POSITION);
@@ -99,9 +101,11 @@ export function createAmbientLighting({ hemisphere, key, fill, invalidate = () =
   let current = { ...AMBIENT_LIGHTING_DEFAULTS };
   let target = { ...AMBIENT_LIGHTING_DEFAULTS };
   let mix = 0;
+  let backgroundBrightness = BACKGROUND_BRIGHTNESS_DEFAULT;
 
   function apply() {
-    const from = resolve(current, colors), to = resolve(target, colors);
+    const from = resolve(backgroundLightingFor(current, backgroundBrightness), colors);
+    const to = resolve(backgroundLightingFor(target, backgroundBrightness), colors);
     hemisphere.intensity = THREE.MathUtils.lerp(from.hemisphereIntensity, to.hemisphereIntensity, mix);
     key.intensity = THREE.MathUtils.lerp(from.keyIntensity, to.keyIntensity, mix);
     fill.intensity = THREE.MathUtils.lerp(from.fillIntensity, to.fillIntensity, mix);
@@ -133,6 +137,12 @@ export function createAmbientLighting({ hemisphere, key, fill, invalidate = () =
       return getState();
     },
     setMix(value) { return this.set({ mix: value }); },
+    setBackgroundBrightness(value) {
+      backgroundBrightness = normalizeBackgroundBrightness(value);
+      apply();
+      return backgroundBrightness;
+    },
+    getBackgroundBrightness() { return backgroundBrightness; },
     getState,
   };
 }

@@ -20,6 +20,12 @@
     <button type="button" class="btn" data-action="tv-video" aria-pressed="true" disabled>TV video: On</button>
     <button type="button" class="btn" data-settings-toggle="crt" aria-controls="crt-settings" aria-expanded="true">CRT settings</button>
     <button type="button" class="btn" data-settings-toggle="hatch" aria-controls="hatch-settings" aria-expanded="false">Cross-hatch settings</button>
+    <label class="form-label scene-brightness-control" for="scene-background-brightness">
+      <span>Background brightness</span>
+      <output for="scene-background-brightness" data-background-brightness-output>50%</output>
+      <input id="scene-background-brightness" class="form-range" type="range" min="0" max="1" step="0.01" value="0.5" data-background-brightness aria-describedby="scene-background-brightness-scale">
+      <span id="scene-background-brightness-scale" class="scene-brightness-scale" aria-hidden="true"><span>Dark</span><span>Bright</span></span>
+    </label>
     <label class="effect-picker" for="scene-effect">
       <span>Post-processing</span>
       <select id="scene-effect" class="form-select" data-action="effect" disabled>

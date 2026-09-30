@@ -98,6 +98,16 @@ scene.setAmbientLightingMix(.5);
 `keyElevation` from 5–85°. Values are clamped to these ranges. Partial current
 or target updates preserve their other values.
 
+The Christmas Credenza toolbar's **Background brightness** slider coordinates
+those ambient fields with the plaster wall color. **50%** preserves the authored
+scene. Toward **Dark**, the room becomes cool and low-fill with deeper shadows,
+leaving the warm lamp and Christmas tree as the dominant practical lights.
+Toward **Bright**, the wall, ambient light, and fill rise while shadows soften,
+ending at the appearance previously shown at **75%**. It does not change the
+lamp, tree, TV, or renderer exposure. The scene element also exposes
+`setBackgroundBrightness(value)` and `getBackgroundBrightness()` using a clamped
+0–1 value.
+
 On the homepage, each emotion uses its lighting description plus brightness,
 temperature, ambient level, fill balance, shadow contrast, and shadow softness
 from `Emotion Cues!H2:N65`. Key direction and elevation remain at the scene's
@@ -140,6 +150,7 @@ included in the normal Vite build; it does not generate standalone HTML editions
 a previously saved file. A snapshot includes:
 
 - Camera orbit, zoom, and pan target (together specifying its position and direction).
+- Background-brightness atmosphere and wall tone.
 - All CRT and Cross-hatch values and selected effect.
 - TV on/off state and playback position.
 - Train running/paused state, track position, and wheel rotation.

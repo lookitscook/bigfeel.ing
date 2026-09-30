@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { CAMERA_DEFAULTS, CAMERA_DISTANCE_MIN } from '../src/camera-controls.js';
 import { CRT_DEFAULTS } from '../src/crt-shader.js';
 import { SCENE_HATCH_DEFAULTS } from '../src/cross-hatch.js';
+import { BACKGROUND_BRIGHTNESS_DEFAULT } from '../src/background-brightness.js';
 import { STATE_APP, STATE_VERSION, STATE_COOKIE, SCENE_DEFAULTS, MAX_STATE_BYTES, parseSceneState, validateSceneState, readStateCookie, writeStateCookie, createScenePersistence } from '../src/scene-state.js';
 
 function fixture() {
@@ -10,6 +11,7 @@ function fixture() {
     app: STATE_APP, version: STATE_VERSION, camera: structuredClone(CAMERA_DEFAULTS),
     train: { running: true, position: 2.45, wheelTravel: 25.62 },
     tv: { enabled: false, currentTime: 12.375 },
+    backgroundBrightness: BACKGROUND_BRIGHTNESS_DEFAULT,
     crt: { enabled: false, parameters: { ...CRT_DEFAULTS, brightness: 1.43 } },
     effect: 'cross-hatch', hatch: { ...SCENE_HATCH_DEFAULTS },
     panels: { crt: false, hatch: true },
@@ -58,12 +60,14 @@ test('invalid imports are rejected and numeric limits are normalized', () => {
   state.crt.parameters.brightness = 99;
   state.hatch.scale = -.2;
   state.hatch.contour = 2.45678;
+  state.backgroundBrightness = 2;
   state.unrecognized = 'ignored';
   const normalized = validateSceneState(state);
   assert.equal(normalized.camera.distance, 4.8);
   assert.equal(normalized.crt.parameters.brightness, 1.8);
   assert.equal(normalized.hatch.scale, .1);
   assert.equal(normalized.hatch.contour, 2.46);
+  assert.equal(normalized.backgroundBrightness, 1);
   assert.equal(normalized.unrecognized, undefined);
 });
 
@@ -78,6 +82,14 @@ test('older scene snapshots restore supported settings and discard obsolete pape
   const legacy = structuredClone(expected);
   legacy.hatch.paper = 'Craft rough';
   assert.deepEqual(parseSceneState(JSON.stringify(legacy)), expected);
+});
+
+test('older scene snapshots adopt the authored background-brightness midpoint', () => {
+  const legacy = fixture();
+  delete legacy.backgroundBrightness;
+  assert.equal(parseSceneState(JSON.stringify(legacy)).backgroundBrightness, BACKGROUND_BRIGHTNESS_DEFAULT);
+  legacy.backgroundBrightness = null;
+  assert.throws(() => validateSceneState(legacy), /backgroundBrightness/);
 });
 
 test('edge fade round trips, defaults for older saves, and rejects invalid values', () => {

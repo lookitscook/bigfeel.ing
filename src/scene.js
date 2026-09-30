@@ -3,6 +3,7 @@ import { LOGO_STORAGE_KEY, readPageBackground, applyPageBackground } from './pag
 import { sceneCircleCutout } from './scene-cutout.js';
 import { emotionVideoUrl, randomEmotionVideo } from './emotion-videos.js';
 import { homeHatchScale } from './home-hatch-scale.js';
+import { BACKGROUND_BRIGHTNESS_DEFAULT, backgroundWallColorFor } from './background-brightness.js';
 const pageBackground = applyPageBackground(readPageBackground());
 const root = document.getElementById('christmas-credenza-tight-3d');
 const stage = root.querySelector('.scene-stage');
@@ -59,7 +60,7 @@ try {
   // A completely bare plaster wall and a small supporting room.
   const plasterMap=texture((c,w,h)=>{c.fillStyle='#bda17d';c.fillRect(0,0,w,h);for(let i=0;i<35000;i++){const a=random()*.07;c.fillStyle=`rgba(${random()<.5?'0,0,0':'255,255,255'},${a})`;c.fillRect(random()*w,random()*h,1+random()*2,1);}},512,512);
   plasterMap.wrapS=plasterMap.wrapT=THREE.RepeatWrapping;plasterMap.repeat.set(5,3);
-  const wallMaterial=new THREE.MeshStandardMaterial({color:'#d2baa0',map:plasterMap,bumpMap:plasterMap,bumpScale:.003,roughness:1});
+  const wallMaterial=new THREE.MeshStandardMaterial({color:backgroundWallColorFor(BACKGROUND_BRIGHTNESS_DEFAULT),map:plasterMap,bumpMap:plasterMap,bumpScale:.003,roughness:1});
   box(12,6,.05,0,2,-.55,wallMaterial);
   box(12,.05,8,0,-.03,2,wood);
   box(12,.12,.03,0,.04,-.50,darkWood);
@@ -315,6 +316,20 @@ try {
   }
   const {createAmbientLighting}=await import('./ambient-lighting.js');
   const ambientLighting=createAmbientLighting({hemisphere,key,fill,invalidate});
+  const backgroundBrightnessInput=root.querySelector('[data-background-brightness]');
+  const backgroundBrightnessOutput=root.querySelector('[data-background-brightness-output]');
+  function setBackgroundBrightness(value){
+    const level=ambientLighting.setBackgroundBrightness(value);
+    wallMaterial.color.set(backgroundWallColorFor(level));
+    if(backgroundBrightnessInput)backgroundBrightnessInput.value=level;
+    if(backgroundBrightnessOutput){
+      const percent=`${Math.round(level*100)}%`;
+      backgroundBrightnessOutput.value=percent;
+      backgroundBrightnessInput?.setAttribute('aria-valuetext',`${percent} background brightness`);
+    }
+    return level;
+  }
+  backgroundBrightnessInput?.addEventListener('input',()=>setBackgroundBrightness(backgroundBrightnessInput.valueAsNumber),{signal:backgroundListeners.signal});
   const {createLampLighting}=await import('./lamp-lighting.js');
   const lampLighting=createLampLighting({point:lamplight,wash,coverMaterial:shadeMat,bulbMaterial,invalidate});
   const {createTreeLighting}=await import('./tree-lighting.js');
@@ -323,6 +338,8 @@ try {
   root.setAmbientLighting=configuration=>ambientLighting.set(configuration);
   root.setAmbientLightingMix=value=>ambientLighting.setMix(value);
   root.getAmbientLighting=()=>ambientLighting.getState();
+  root.setBackgroundBrightness=value=>setBackgroundBrightness(value);
+  root.getBackgroundBrightness=()=>ambientLighting.getBackgroundBrightness();
   root.setLampLighting=value=>lampLighting.set(value);
   root.getLampLighting=()=>lampLighting.get();
   root.setTreeLighting=sequence=>treeLighting.set(sequence);
@@ -371,11 +388,11 @@ try {
   const trainButton=root.querySelector('[data-action="train"]');
   function setTrainRunning(value){runTrain=value;prevTime=0;if(trainFrame!==null)cancelAnimationFrame(trainFrame);trainFrame=null;if(trainButton){trainButton.textContent=runTrain?'Pause train':'Run train';trainButton.setAttribute('aria-pressed',String(runTrain));}if(runTrain)trainFrame=requestAnimationFrame(animate);}
   trainButton?.addEventListener('click',()=>setTrainRunning(!runTrain));
-  function getState(){return {app:STATE_APP,version:STATE_VERSION,camera:cameraRig.getState(),train:{running:runTrain,position:trainS,wheelTravel},...tvVideo.getState(),...postProcessing.getState(),panels:panels.getState()};}
+  function getState(){return {app:STATE_APP,version:STATE_VERSION,camera:cameraRig.getState(),train:{running:runTrain,position:trainS,wheelTravel},...tvVideo.getState(),backgroundBrightness:ambientLighting.getBackgroundBrightness(),...postProcessing.getState(),panels:panels.getState()};}
   function applyState(state){
     cameraRig.setState(state.camera);
     trainS=state.train.position%loopLength;wheelTravel=state.train.wheelTravel;placeTrain();placeWheels();setTrainRunning(state.train.running);
-    tvVideo.setState(state);postProcessing.setState(state);syncResponsiveHatchScale();panels.setState(state.panels);invalidate();
+    tvVideo.setState(state);setBackgroundBrightness(state.backgroundBrightness);postProcessing.setState(state);syncResponsiveHatchScale();panels.setState(state.panels);invalidate();
   }
   // The homepage shares the scene defaults without saving over the editor.
   if(presentation){
@@ -428,7 +445,7 @@ try {
     }
   }
   else persistence=createScenePersistence(root,getState,applyState);
-  renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();backgroundListeners.abort();persistence?.dispose();setTrainRunning(false);cameraControls?.dispose();cursorCamera?.dispose();resizeObserver.disconnect();treeLighting.dispose();tvVideo.dispose();panels.dispose();postProcessing.dispose();delete root.setAmbientLighting;delete root.setAmbientLightingMix;delete root.getAmbientLighting;delete root.setLampLighting;delete root.getLampLighting;delete root.setTreeLighting;delete root.getTreeLighting;delete root.setEmotionVideo;delete root.getEmotionVideo;message.hidden=false;message.textContent='The 3D view lost its graphics connection. Reload to restore the scene.';});
+  renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();backgroundListeners.abort();persistence?.dispose();setTrainRunning(false);cameraControls?.dispose();cursorCamera?.dispose();resizeObserver.disconnect();treeLighting.dispose();tvVideo.dispose();panels.dispose();postProcessing.dispose();delete root.setAmbientLighting;delete root.setAmbientLightingMix;delete root.getAmbientLighting;delete root.setBackgroundBrightness;delete root.getBackgroundBrightness;delete root.setLampLighting;delete root.getLampLighting;delete root.setTreeLighting;delete root.getTreeLighting;delete root.setEmotionVideo;delete root.getEmotionVideo;message.hidden=false;message.textContent='The 3D view lost its graphics connection. Reload to restore the scene.';});
   message.hidden=true;root.dataset.ready='true';root.dispatchEvent(new CustomEvent('scene-ready'));
 } catch(error) {
   message.hidden=false;message.textContent='The 3D scene could not start. It needs WebGL and the bundled app files.';

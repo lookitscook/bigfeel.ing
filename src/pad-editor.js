@@ -1,6 +1,6 @@
 import * as THREE from '../vendor/three.module.js';
 import { LOGO_STORAGE_KEY, readPageBackground, applyPageBackground } from './page-background.js';
-import { PAD_EMOTIONS, PAD_COLOR_GLSL, padEmotionSource, visiblePadEmotions, nearestPadLabels, dirToPad, padColor, padColorHex, padDominanceBrightness, padEmotion, nearestPadEmotion, ringAngle, ringIntensity, padCameraDistance, padSphereCrop } from './pad-model.js';
+import { PAD_EMOTIONS, PAD_COLOR_GLSL, padEmotionSource, visiblePadEmotions, nearestPadLabels, dirToPad, padColor, padColorHex, padDominanceBrightness, padPleasureBackgroundBrightness, padEmotion, nearestPadEmotion, ringAngle, ringIntensity, padCameraDistance, padSphereCrop } from './pad-model.js';
 
 const stage = document.getElementById('pad-stage');
 const emotionEl = document.getElementById('pad-emotion');
@@ -310,7 +310,11 @@ function createSelector() {
     const format = value => `${value >= 0 ? '+' : ''}${value.toFixed(2)}`;
     padEl.textContent = `P ${format(values.p)} · A ${format(values.a)} · D ${format(values.d)} · ${Math.round(intensity * 100)}%`;
     stage.dispatchEvent(new CustomEvent('pad-selection-change', {
-      detail: { label, nearestEmotion, values, surface, brightness: padDominanceBrightness(surface.d) },
+      detail: {
+        label, nearestEmotion, values, surface,
+        brightness: padDominanceBrightness(surface.d),
+        backgroundBrightness: padPleasureBackgroundBrightness(surface.p),
+      },
     }));
     if (settled && selectedIndex >= 0 && settledEmotion !== label) {
       settledEmotion = label;

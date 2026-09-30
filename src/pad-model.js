@@ -103,6 +103,15 @@ export function padDominanceBrightness(d) {
   return Math.max(0, Math.min(1, (d + 1) / 2));
 }
 
+// Surface pleasure drives the homepage room from 10% through the scene
+// editor's current 80% background-brightness appearance.
+export function padPleasureBackgroundBrightness(p) {
+  const pleasure = Math.max(0, Math.min(1, (p + 1) / 2));
+  if (pleasure === 0) return .1;
+  if (pleasure === 1) return .8;
+  return .1 + pleasure * .7;
+}
+
 export function padColorHex(p, a, d) {
   return `#${padColor(p, a, d).map(channel => Math.round(channel * 255).toString(16).padStart(2, '0')).join('')}`;
 }

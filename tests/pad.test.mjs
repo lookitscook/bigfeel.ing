@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../vendor/three.module.js';
-import { PAD_LANDMARKS, PAD_EMOTIONS, padEmotionKind, padEmotionSource, visiblePadEmotions, nearestPadLabels, dirToPad, padColor, padColorHex, padDominanceBrightness, PAD_COLOR_GLSL, padEmotion, nearestPadEmotion, ringAngle, ringIntensity, padCameraDistance, padSphereCrop } from '../src/pad-model.js';
+import { PAD_LANDMARKS, PAD_EMOTIONS, padEmotionKind, padEmotionSource, visiblePadEmotions, nearestPadLabels, dirToPad, padColor, padColorHex, padDominanceBrightness, padPleasureBackgroundBrightness, PAD_COLOR_GLSL, padEmotion, nearestPadEmotion, ringAngle, ringIntensity, padCameraDistance, padSphereCrop } from '../src/pad-model.js';
 import { WARRINER_RATINGS, PAD_WARRINER_LANDMARKS } from '../src/pad-warriner.js';
 
 test('all 151 Table 4 mean triplets are present in original row order', () => {
@@ -65,6 +65,14 @@ test('surface dominance maps directly to normalized Y brightness', () => {
   assert.equal(padDominanceBrightness(1), 1);
   assert.equal(padDominanceBrightness(-2), 0);
   assert.equal(padDominanceBrightness(2), 1);
+});
+
+test('surface pleasure maps from 10% to 80% background brightness', () => {
+  assert.equal(padPleasureBackgroundBrightness(-1), .1);
+  assert.ok(Math.abs(padPleasureBackgroundBrightness(0) - .45) < 1e-12);
+  assert.equal(padPleasureBackgroundBrightness(1), .8);
+  assert.equal(padPleasureBackgroundBrightness(-2), .1);
+  assert.equal(padPleasureBackgroundBrightness(2), .8);
 });
 
 test('intensity ring positions round trip through the 300-degree sweep', () => {

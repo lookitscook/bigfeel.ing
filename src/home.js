@@ -2,7 +2,6 @@ import './home-layout.js';
 import { HOME_DEBUG_ENABLED } from './home-debug-state.js';
 import { renderHomeCopy } from './home-copy.js';
 import { createEmotionAutoplay } from './home-emotion-autoplay.js';
-import { createEmotionLightingController } from './emotion-lighting.js';
 import { treeLightingForEmotion } from './emotion-tree-lighting.js';
 import { HATCH_SLIDERS } from './cross-hatch.js';
 import { createLiveFavicon } from './live-favicon.js';
@@ -19,9 +18,8 @@ const selector = document.getElementById('pad-stage');
 const homeBody = document.querySelector('.home-body');
 const lampListeners = new AbortController();
 let lampBrightness = .5;
+let backgroundBrightness = .4;
 let selectedEmotion = 'Inspired';
-let emotionLighting = null;
-let pendingLightingEmotion = selectedEmotion;
 let pendingTreeEmotion = selectedEmotion;
 let appliedTreeEmotion = null;
 const emotionAutoplay = createEmotionAutoplay({
@@ -30,6 +28,7 @@ const emotionAutoplay = createEmotionAutoplay({
   select: name => selector.selectPadEmotion?.(name),
 });
 function syncLamp() { scene.setLampLighting?.(lampBrightness); }
+function syncBackgroundBrightness() { scene.setBackgroundBrightness?.(backgroundBrightness); }
 function syncEmotionVideo() { scene.setEmotionVideo?.(selectedEmotion); }
 function syncTreeLighting(name = pendingTreeEmotion) {
   pendingTreeEmotion = name;
@@ -41,18 +40,16 @@ function syncTreeLighting(name = pendingTreeEmotion) {
 }
 selector.addEventListener('pad-selection-change', event => {
   lampBrightness = event.detail.brightness;
-  pendingLightingEmotion = event.detail.nearestEmotion ?? pendingLightingEmotion;
-  emotionLighting?.transitionTo(pendingLightingEmotion);
+  backgroundBrightness = event.detail.backgroundBrightness;
   syncTreeLighting(event.detail.nearestEmotion ?? pendingTreeEmotion);
   syncLamp();
+  syncBackgroundBrightness();
 }, { signal: lampListeners.signal });
 selector.addEventListener('pad-emotion-transition', event => {
   renderHomeCopy(homeBody, event.detail.name, event.detail);
 }, { signal: lampListeners.signal });
 selector.addEventListener('pad-emotion-selected', event => {
   selectedEmotion = event.detail.name;
-  pendingLightingEmotion = selectedEmotion;
-  emotionLighting?.transitionTo(selectedEmotion);
   syncTreeLighting(selectedEmotion);
   syncEmotionVideo();
 }, { signal: lampListeners.signal });
@@ -62,16 +59,13 @@ for (const type of ['pointerdown', 'keydown', 'change']) {
 }
 if (typeof selector.selectPadEmotion === 'function') emotionAutoplay.start();
 scene.addEventListener('scene-ready', () => {
-  emotionLighting = createEmotionLightingController(scene, {
-    duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : undefined,
-  });
-  emotionLighting.transitionTo(pendingLightingEmotion);
   syncTreeLighting();
   syncLamp();
+  syncBackgroundBrightness();
   syncEmotionVideo();
 }, { signal: lampListeners.signal });
 window.addEventListener('pagehide', event => {
-  if (!event.persisted) { emotionAutoplay.stop(); emotionLighting?.dispose(); lampListeners.abort(); }
+  if (!event.persisted) { emotionAutoplay.stop(); lampListeners.abort(); }
 }, { signal: lampListeners.signal });
 try {
   const logoCanvas = document.getElementById('home-logo-sphere');

@@ -108,12 +108,12 @@ lamp, tree, TV, or renderer exposure. The scene element also exposes
 `setBackgroundBrightness(value)` and `getBackgroundBrightness()` using a clamped
 0–1 value.
 
-On the homepage, each emotion uses its lighting description plus brightness,
-temperature, ambient level, fill balance, shadow contrast, and shadow softness
-from `Emotion Cues!H2:N65`. Key direction and elevation remain at the scene's
-original authored values. While the globe moves, the scene fades toward the
-nearest surface emotion; once selection settles, it finishes on that emotion's
-lighting state.
+On the homepage, background brightness follows the selector's surface pleasure
+directly: `P = −1` (0% pleasure) uses 10% on the scene brightness control,
+`P = 0` uses 45%, and `P = 1` (100% pleasure) uses the current 80% background
+setting. The intensity ring does not alter this surface-derived value. The
+selector publishes it as
+`pad-selection-change.detail.backgroundBrightness`.
 
 The tree follows `Emotion Cues!D2:D65`. Each emotion supplies a repeating
 five-bulb DMX RGB sequence; the scene repeats it across all 155 bulbs and

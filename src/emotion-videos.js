@@ -2,10 +2,15 @@ import { PAD_EMOTIONS } from './pad-model.js';
 
 export const EMOTION_VIDEO_NAMES = Object.freeze(PAD_EMOTIONS.map(([name]) => name));
 
-export function emotionVideoUrl(name) {
+export function emotionVideoFilename(name) {
   const canonical = EMOTION_VIDEO_NAMES.find(candidate => candidate.toLowerCase() === String(name).toLowerCase());
   if (!canonical) return null;
-  const filename = `${canonical.toLowerCase()}.mp4`;
+  return `${canonical.toLowerCase()}.mp4`;
+}
+
+export function emotionVideoUrl(name) {
+  const filename = emotionVideoFilename(name);
+  if (!filename) return null;
   return new URL(`../content/emotions/${filename}`, import.meta.url).href;
 }
 

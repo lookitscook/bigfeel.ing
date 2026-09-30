@@ -73,6 +73,15 @@ On the homepage, the globe animates to a random emotion on load and chooses a
 new, non-repeating emotion every 6.5 seconds until the visitor interacts with
 the selector.
 
+An italic Literata caption beneath the Christmas image reports the live
+pleasure, arousal, and dominance coordinates as 0–255 bytes. Beside them it
+shows the active five-bulb repeat beside a `dmx512` label as an uppercase
+hexadecimal byte stream, including its leading `00` start code. The `narrative`
+row shows the television's current `.mp4` filename, while `dimmer` reports the
+dominance-driven lamp output from `0V~` to `120V~`. A
+right-aligned countdown shows the time until the next automatic emotion and
+disappears permanently after a manual selector interaction stops autoplay.
+
 The Christmas scene element exposes ambient-lighting methods after its
 `data-ready` attribute becomes `true`. Supply separate `current` and `target`
 states and animate `mix` from 0 to 1 to crossfade the hemisphere, key, and fill

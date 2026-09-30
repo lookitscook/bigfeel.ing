@@ -1,7 +1,9 @@
 import './home-layout.js';
 import { HOME_DEBUG_ENABLED } from './home-debug-state.js';
 import { renderHomeCopy } from './home-copy.js';
+import { createHomeCaption } from './home-caption.js';
 import { createEmotionAutoplay } from './home-emotion-autoplay.js';
+import { emotionVideoFilename } from './emotion-videos.js';
 import { treeLightingForEmotion } from './emotion-tree-lighting.js';
 import { HATCH_SLIDERS } from './cross-hatch.js';
 import { createLiveFavicon } from './live-favicon.js';
@@ -16,31 +18,60 @@ applyPageBackground(readPageBackground());
 const scene = document.getElementById('christmas-credenza-tight-3d');
 const selector = document.getElementById('pad-stage');
 const homeBody = document.querySelector('.home-body');
+const caption = createHomeCaption(document.querySelector('[data-home-caption]'));
 const lampListeners = new AbortController();
 let lampBrightness = .5;
 let backgroundBrightness = .4;
 let selectedEmotion = 'Inspired';
 let pendingTreeEmotion = selectedEmotion;
 let appliedTreeEmotion = null;
+let captionTreeEmotion = null;
+let countdownTimer = null;
+function syncCountdown(deadline) {
+  clearTimeout(countdownTimer);
+  countdownTimer = null;
+  if (deadline === null) {
+    caption.setCountdown(null);
+    return;
+  }
+  function update() {
+    const remaining = Math.max(0, deadline - performance.now());
+    caption.setCountdown(remaining);
+    if (remaining <= 0) return;
+    const seconds = Math.ceil(remaining / 1000);
+    const untilNextSecond = remaining - (seconds - 1) * 1000;
+    countdownTimer = setTimeout(update, Math.max(16, untilNextSecond + 16));
+  }
+  update();
+}
 const emotionAutoplay = createEmotionAutoplay({
   emotions: PAD_EMOTIONS.map(([name]) => name),
   initial: selectedEmotion,
   select: name => selector.selectPadEmotion?.(name),
+  onSchedule: syncCountdown,
 });
-function syncLamp() { scene.setLampLighting?.(lampBrightness); }
+function syncLamp() { caption.setLamp(lampBrightness); scene.setLampLighting?.(lampBrightness); }
 function syncBackgroundBrightness() { scene.setBackgroundBrightness?.(backgroundBrightness); }
-function syncEmotionVideo() { scene.setEmotionVideo?.(selectedEmotion); }
+function syncEmotionVideo() {
+  caption.setVideo(emotionVideoFilename(selectedEmotion) ?? '—');
+  scene.setEmotionVideo?.(selectedEmotion);
+}
 function syncTreeLighting(name = pendingTreeEmotion) {
   pendingTreeEmotion = name;
-  if (name === appliedTreeEmotion || typeof scene.setTreeLighting !== 'function') return;
   const sequence = treeLightingForEmotion(name);
   if (!sequence) return;
+  if (name !== captionTreeEmotion) {
+    caption.setTree(sequence);
+    captionTreeEmotion = name;
+  }
+  if (name === appliedTreeEmotion || typeof scene.setTreeLighting !== 'function') return;
   scene.setTreeLighting(sequence);
   appliedTreeEmotion = name;
 }
 selector.addEventListener('pad-selection-change', event => {
   lampBrightness = event.detail.brightness;
   backgroundBrightness = event.detail.backgroundBrightness;
+  caption.setPad(event.detail.values);
   syncTreeLighting(event.detail.nearestEmotion ?? pendingTreeEmotion);
   syncLamp();
   syncBackgroundBrightness();

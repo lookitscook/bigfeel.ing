@@ -2,15 +2,18 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { access } from 'node:fs/promises';
 import { PAD_EMOTIONS } from '../src/pad-model.js';
-import { EMOTION_VIDEO_NAMES, emotionVideoUrl, randomEmotionVideo } from '../src/emotion-videos.js';
+import { EMOTION_VIDEO_NAMES, emotionVideoFilename, emotionVideoUrl, randomEmotionVideo } from '../src/emotion-videos.js';
 
 test('every dropdown emotion has a matching web video', async () => {
   assert.deepEqual(EMOTION_VIDEO_NAMES, PAD_EMOTIONS.map(([name]) => name));
   await Promise.all(EMOTION_VIDEO_NAMES.map(async name => {
+    assert.equal(emotionVideoFilename(name), `${name.toLowerCase()}.mp4`);
     const url = emotionVideoUrl(name);
     assert.match(url, new RegExp(`/content/emotions/${name.toLowerCase()}\\.mp4$`));
     await access(new URL(url));
   }));
+  assert.equal(emotionVideoFilename('HAPPY'), 'happy.mp4');
+  assert.equal(emotionVideoFilename('not-an-emotion'), null);
   assert.equal(emotionVideoUrl('not-an-emotion'), null);
 });
 

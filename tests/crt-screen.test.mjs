@@ -2,7 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../vendor/three.module.js';
 import { createCRTScreen, TV_GLARE_INTENSITY } from '../src/crt-screen.js';
-import { CRT_CONTROLS, CRT_DEFAULTS, crtUniformName } from '../src/crt-shader.js';
+import { CRT_CONTROLS, CRT_DEFAULTS, CRT_VIGNETTE_DARKENING, crtUniformName } from '../src/crt-shader.js';
+
+test('CRT vignette darkening is five eighths of its original intensity without changing the falloff', () => {
+  assert.equal(CRT_VIGNETTE_DARKENING, .97 * .625);
+});
 
 function fixture() {
   const texture = new THREE.Texture();

@@ -1,5 +1,7 @@
 // Adapted from Serenity Shader by Matt Sephton (@gingerbeardman), MIT.
 // See vendor/crt/ for the original shader, license, and adaptation notes.
+export const CRT_VIGNETTE_DARKENING = .60625;
+
 export const CRT_DEFAULTS = Object.freeze({
   scanlineIntensity: .33, scanlineCount: 144, adaptiveIntensity: .5, yOffset: 0,
   brightness: 1.75, contrast: .89, saturation: .81, rgbShift: .1,
@@ -121,7 +123,8 @@ export const crtFragment = /* glsl */ `
       lightingMask *= 1.0 + sin(crtTime * 110.0) * crtFlickerStrength;
       // Retain the existing adjustable vignette without stacking a second mask.
       vec2 edge = (uv - 0.5) * 2.0;
-      vignette = 1.0 - 0.97 * crtVignetteStrength * smoothstep(0.10, 1.0, dot(edge, edge));
+      vignette = 1.0 - ${CRT_VIGNETTE_DARKENING} * crtVignetteStrength
+        * smoothstep(0.10, 1.0, dot(edge, edge));
       picture = crtToLinear(pixel * lightingMask) * vignette;
     }
     if (staticMix <= 0.001) return picture;

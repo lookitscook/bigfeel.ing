@@ -205,9 +205,11 @@ videos keep their original resolution. Change `MAX_VIDEO_TEXTURE_SIZE` in
 
 Open **CRT settings** in the toolbar to adjust the TV picture. The **TV vignette**
 slider adjusts edge and corner darkening live, from **0%**
-(no vignette) to **100%** (the strongest effect). It defaults to a gentler **50%**
+(no vignette) to **100%** (the strongest effect). It defaults to **70%**
 and retains your setting when video is toggled off and back on. The slider is
-disabled while the video is off. The screen keeps its reflective clearcoat glass.
+disabled while the video is off. The vignette's darkening is rendered at 62.5%
+of its original intensity without changing the size or shape of its falloff. The
+screen keeps its reflective clearcoat glass.
 A soft rectangular
 glow surrounds the screen, masked by the glass so it only appears outside the
 screen edge, and a rectangular area light illuminates nearby objects.

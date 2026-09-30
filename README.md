@@ -209,9 +209,10 @@ Click **TV video: On** in the toolbar to turn the content off: playback pauses,
 the glow and screen light switch off, and the original screen texture and UV mapping
 return. Click **TV video: Off** to resume silent playback from the paused position.
 
-The 64 filenames are the lowercase dropdown labels followed by `.mp4`. When the
-curated PAD set changes, add a matching browser-compatible MP4 to
-`content/emotions/`. The test suite checks that every dropdown value has a file.
+The 64 emotion-to-video filename mappings mirror the `filename` column in the
+Christmas Credenza Emotion Cue Matrix. When the curated PAD set changes, update
+`src/emotion-videos.js` and add the matching browser-compatible MP4 to
+`content/emotions/`. The test suite checks that every dropdown value has a unique file.
 Reload the development page, or run `npm run build` for the packaged editions.
 
 To reproduce the bundled compression with FFmpeg:

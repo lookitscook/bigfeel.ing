@@ -1,7 +1,7 @@
 import * as THREE from '../vendor/three.module.js';
 
 export const CAMERA_DEFAULTS = Object.freeze({
-  yaw: -0.5231882112845768, pitch: 0.12120312500000002, distance: 1.8825519019374903,
+  yaw: -0.5231882112845768, pitch: 0.12120312500000002, distance: 1.64,
   target: Object.freeze([0.0759447936460346, 1.263378774797568, 0.08526518192651969]),
 });
 export const CAMERA_DISTANCE_MIN = 0.7;

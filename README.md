@@ -30,8 +30,9 @@ the camera captured from the local editor; scroll or pinch to explore the scene.
 
 Project defaults were captured from the local logo and credenza editors on
 2026-09-20. Fresh sessions use those colors, camera, effects, playback state, and
-panel visibility. Existing browser saves still take precedence. Reset controls
-restore the corresponding captured defaults.
+panel visibility; the camera framing was later tightened around the television.
+Existing browser saves still take precedence. Reset controls restore the
+corresponding captured defaults.
 
 ## Homepage preview
 

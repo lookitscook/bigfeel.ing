@@ -27,6 +27,7 @@ let pendingTreeEmotion = selectedEmotion;
 let appliedTreeEmotion = null;
 let captionTreeEmotion = null;
 let countdownTimer = null;
+let transitioningVideoEmotion = null;
 function syncCountdown(deadline) {
   clearTimeout(countdownTimer);
   countdownTimer = null;
@@ -78,11 +79,19 @@ selector.addEventListener('pad-selection-change', event => {
 }, { signal: lampListeners.signal });
 selector.addEventListener('pad-emotion-transition', event => {
   renderHomeCopy(homeBody, event.detail.name, event.detail);
+  transitioningVideoEmotion = scene.transitionEmotionVideo?.(event.detail.name, event.detail)
+    ? event.detail.name
+    : null;
+}, { signal: lampListeners.signal });
+selector.addEventListener('pad-sphere-drag-start', event => {
+  scene.setTVStatic?.(1, event.detail.duration);
 }, { signal: lampListeners.signal });
 selector.addEventListener('pad-emotion-selected', event => {
   selectedEmotion = event.detail.name;
   syncTreeLighting(selectedEmotion);
-  syncEmotionVideo();
+  caption.setVideo(emotionVideoFilename(selectedEmotion) ?? '—');
+  if (transitioningVideoEmotion !== selectedEmotion) scene.setEmotionVideo?.(selectedEmotion);
+  transitioningVideoEmotion = null;
 }, { signal: lampListeners.signal });
 selector.addEventListener('pad-selector-ready', () => emotionAutoplay.start(), { signal: lampListeners.signal });
 for (const type of ['pointerdown', 'keydown', 'change']) {

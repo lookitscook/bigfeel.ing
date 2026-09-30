@@ -238,6 +238,24 @@ test('emotion selection events wait for the picker snap to settle', async () => 
   assert.deepEqual(selected, ['Sad']);
 });
 
+test('dragging the sphere cues static before the snap and marks the transition as covered', async () => {
+  const app = await selector();
+  const starts = [];
+  const transitions = [];
+  app.elements['pad-stage'].addEventListener('pad-sphere-drag-start', event => starts.push(event.detail));
+  app.elements['pad-stage'].addEventListener('pad-emotion-transition', event => transitions.push(event.detail));
+  app.pointer('pointerdown');
+  app.pointer('pointermove', 340, 325);
+  assert.equal(starts.length, 1);
+  assert.equal(starts[0].duration, 180);
+  app.pointer('pointermove', 360, 335);
+  assert.equal(starts.length, 1);
+  app.pointer('pointerup', 360, 335);
+  assert.equal(transitions.length, 1);
+  assert.equal(transitions[0].staticReady, true);
+  assert.equal(transitions[0].duration, 420);
+});
+
 test('globe colors render separately from overlays, retaining sphere depth and synchronized canvases', async () => {
   const app = await selector();
   const globe = app.renderers.find(renderer => renderer.domElement.className === 'pad-globe');

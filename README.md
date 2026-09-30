@@ -61,9 +61,13 @@ The Christmas presentation uses the captured scene defaults without modifying
 saved editor settings. The logo's sphere follows the selector's current
 front-facing color gradient live, before sepia and without mesh lines, points,
 or labels. The page favicon follows the same animated, sepia-treated sphere.
-When an emotion settles under the reticle, the homepage body switches
-to its four-paragraph “Big Feeling copy” from the Emotion Cue Matrix at the same
-time as the television changes videos. Characters briefly scramble through a
+When an emotion starts moving toward the reticle, the homepage body switches
+to its four-paragraph “Big Feeling copy” from the Emotion Cue Matrix while the
+television transitions between videos through animated analog broadcast static.
+Dragging the sphere raises static over the current picture; releasing it swaps
+the source under full static and reveals the new picture as the 420 ms globe snap
+finishes. Automatic and dropdown selections reach full static halfway through
+that same motion, switch sources, and then clear. Characters briefly scramble through a
 seeded set of unstable glyphs before progressively resolving into the new copy.
 Only new words or words whose paragraph-relative positions moved are decoded;
 unchanged words stay stable. Encoded words interpolate from their old lengths to
@@ -186,8 +190,9 @@ not the bundled video or textures.
 ## Television video
 
 The homepage television plays the video in `content/emotions/` that matches the
-emotion selected by the PAD dropdown. It changes after the sphere finishes
-snapping to the new emotion. The scene editor chooses a random emotion video on
+emotion selected by the PAD dropdown. Its source changes while fully hidden by
+analog static, which clears when the sphere finishes snapping to the new emotion.
+The scene editor chooses a random emotion video on
 each page load. All videos repeat with audio muted and volume set to zero.
 Playback continues independently of the train and works with Cross-hatch II
 enabled. Footage scales to fill the curved CRT glass, preserving its proportions
@@ -489,9 +494,13 @@ below it on small screens. Opening a panel brings it into view.
 | TV vignette | 0–100% | 70% |
 | Curvature | 0–0.5 | 0 |
 | Flicker | 0–15% | 3% |
+| Analog static | 0–100% | 0% |
 | Bloom strength | 0–1.5 | 0.65 |
 | Bloom threshold | 0–1 | 0.19 |
 
+**Analog static** mixes a procedural monochrome broadcast-noise shader over the
+picture; at 100% the source video is completely obscured. The homepage drives a
+separate transition mix so this authored editor value remains saved and reusable.
 **Enable CRT picture effect** bypasses or restores the picture filters without
 stopping the video. **Reset CRT** restores the table's defaults and enables the
 picture effect. Turning **TV video** off disables these controls, pauses playback,
@@ -551,7 +560,7 @@ See [GitHub's custom Pages workflow documentation](https://docs.github.com/en/pa
 - `index.html`, `src/`, `vendor/` — homepage and readable local dependencies.
 - `scene/index.html` — full Christmas scene editor.
 - `src/cross-hatch.js`, `src/post-processing.js` — optional effect and configuration controls.
-- `src/tv-video.js`, `src/crt-screen.js` — silent looping video, reflective CRT glass, glow, area light, and on/off control.
+- `src/tv-video.js`, `src/crt-screen.js`, `src/tv-static-transition.js` — silent looping video, analog-static transitions, reflective CRT glass, glow, area light, and on/off control.
 - `src/crt-shader.js`, `src/crt-controls.js`, `src/effect-panels.js` — CRT picture effects, live controls, and reopenable settings panels.
 - `src/camera-controls.js`, `src/scene-state.js` — constrained orbit/pan/zoom, JSON import/export, and automatic state persistence.
 - `pad/index.html`, `src/pad-editor.js`, `src/pad-model.js` — PAD sphere selector, shared palette, and YUV mapping.

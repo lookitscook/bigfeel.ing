@@ -69,7 +69,8 @@ export function validateSceneState(value) {
     backgroundBrightness: value.backgroundBrightness === undefined
       ? BACKGROUND_BRIGHTNESS_DEFAULT
       : number(value.backgroundBrightness, 'backgroundBrightness', 0, 1),
-    crt: { enabled: boolean(crt.enabled, 'crt.enabled'), parameters: parameters(crt.parameters, CRT_CONTROLS, 'CRT') },
+    crt: { enabled: boolean(crt.enabled, 'crt.enabled'),
+      parameters: parameters({ ...CRT_DEFAULTS, ...crt.parameters }, CRT_CONTROLS, 'CRT') },
     effect: value.effect,
     hatch: { ...parameters(sceneHatch, SCENE_HATCH_SLIDERS, 'cross-hatch'), ...HATCH_FIXED_PARAMETERS },
     panels: { crt: boolean(panels.crt, 'panels.crt'), hatch: boolean(panels.hatch, 'panels.hatch') },

@@ -15,7 +15,7 @@ export function createCRTControls(root, crt, invalidate) {
       setState(state) {
         shaderEnabled = state.enabled;
         for (const { key } of CRT_CONTROLS) {
-          parameters[key] = state.parameters[key];
+          parameters[key] = Number.isFinite(state.parameters[key]) ? state.parameters[key] : CRT_DEFAULTS[key];
           crt.setParameter(key, parameters[key]);
         }
         crt.setShaderEnabled(shaderEnabled);
@@ -72,7 +72,9 @@ export function createCRTControls(root, crt, invalidate) {
   return {
     getState() { return { enabled: enabled.checked, parameters: { ...parameters } }; },
     setState(state) {
-      for (const [key, update] of controls) update(state.parameters[key]);
+      for (const [key, update] of controls) {
+        update(Number.isFinite(state.parameters[key]) ? state.parameters[key] : CRT_DEFAULTS[key]);
+      }
       enabled.checked = state.enabled;
       crt.setShaderEnabled(state.enabled);
       invalidate();

@@ -81,6 +81,7 @@ test('older scene snapshots restore supported settings and discard obsolete pape
   const expected = fixture();
   const legacy = structuredClone(expected);
   legacy.hatch.paper = 'Craft rough';
+  delete legacy.crt.parameters.staticAmount;
   assert.deepEqual(parseSceneState(JSON.stringify(legacy)), expected);
 });
 

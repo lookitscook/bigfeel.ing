@@ -115,6 +115,9 @@ export function createCRTScreen(screen, videoTexture) {
     },
     setShaderEnabled(enabled) { uniforms.crtEnabled.value = Boolean(enabled); },
     setTime(time) { if (Number.isFinite(time)) uniforms.crtTime.value = time; },
+    setTransitionStatic(value) {
+      if (Number.isFinite(value)) uniforms.crtTransitionStatic.value = THREE.MathUtils.clamp(value, 0, 1);
+    },
     setEnabled(enabled) {
       screen.material = enabled ? material : originalMaterial;
       screen.geometry = enabled ? geometry : originalGeometry;

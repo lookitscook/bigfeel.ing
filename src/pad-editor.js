@@ -11,6 +11,7 @@ const colorSwatch = document.getElementById('pad-color-swatch');
 const colorValue = document.getElementById('pad-color-value');
 const landmarkPicker = document.getElementById('pad-landmark-picker');
 const PAD_SNAP_DURATION = 420;
+const PAD_STATIC_RAMP_DURATION = 180;
 document.getElementById('pad-landmark-count').textContent = `${PAD_EMOTIONS.length} EMOTION LANDMARKS`;
 applyPageBackground(readPageBackground());
 
@@ -48,6 +49,7 @@ function createSelector() {
   let settledEmotion = null;
   let activePointer = null, dragMode = null, lastX = 0, lastY = 0;
   let dragDistance = 0, lastDragMoved = false, previousDragMoved = false;
+  let staticDragActive = false;
   let colorCrop = [0, 0, 1, 1];
   function invalidate() {
     if (frame !== null || disposed) return;
@@ -331,8 +333,10 @@ function createSelector() {
   }
   // Use the retained surface direction even at zero intensity, where PAD is
   // the origin and cannot identify a direction on its own.
-  function snapToEmotion(emotion = nearestPadEmotion(dirToPad(selectedDirection, 1))) {
+  function snapToEmotion(emotion = nearestPadEmotion(dirToPad(selectedDirection, 1)), transition = {}) {
+    const staticReady = transition.staticReady ?? staticDragActive;
     releaseDrag();
+    staticDragActive = false;
     snap = null;
     const direction = new THREE.Vector3(emotion.p, emotion.a, emotion.d).normalize();
     const correction = new THREE.Quaternion().setFromUnitVectors(direction.applyQuaternion(group.quaternion).normalize(), front);
@@ -341,7 +345,8 @@ function createSelector() {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const started = performance.now();
     stage.dispatchEvent(new CustomEvent('pad-emotion-transition', {
-      detail: { name: emotion.name, duration: reducedMotion ? 0 : PAD_SNAP_DURATION, startedAt: started },
+      detail: { name: emotion.name, duration: reducedMotion ? 0 : PAD_SNAP_DURATION,
+        startedAt: started, staticReady: !reducedMotion && staticReady },
     }));
     if (reducedMotion) {
       group.quaternion.copy(to);
@@ -407,6 +412,7 @@ function createSelector() {
     snap = null;
     activePointer = event.pointerId;
     dragDistance = 0;
+    staticDragActive = false;
     updateLandmarks(emotionEl.textContent);
     event.preventDefault();
     lastX = event.clientX; lastY = event.clientY;
@@ -421,6 +427,14 @@ function createSelector() {
     // was missed. Do not keep rotating after the button is already up.
     if (event.buttons === 0 && event.pointerType !== 'touch') { endDrag(event); return; }
     dragDistance += Math.hypot(event.clientX - lastX, event.clientY - lastY);
+    if (dragMode === 'sphere' && !staticDragActive && dragDistance > 3) {
+      staticDragActive = true;
+      stage.dispatchEvent(new CustomEvent('pad-sphere-drag-start', {
+        detail: { duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+          ? 0
+          : PAD_STATIC_RAMP_DURATION },
+      }));
+    }
     if (dragMode === 'ring') changeIntensity(event);
     else if (dragMode === 'sphere') rotate(event.clientX - lastX, event.clientY - lastY);
     lastX = event.clientX; lastY = event.clientY;
@@ -436,8 +450,7 @@ function createSelector() {
   }
   function endDrag(event) {
     if (event.pointerId !== activePointer) return;
-    releaseDrag();
-    snapToEmotion();
+    snapToEmotion(undefined, { staticReady: staticDragActive });
   }
   for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) canvas.addEventListener(type, endDrag, options);
   for (const type of ['pointerup', 'pointercancel']) window.addEventListener(type, endDrag, options);

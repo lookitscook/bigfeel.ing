@@ -351,6 +351,13 @@ try {
     tvEmotion=name;
     return tvVideo.setSource(source);
   };
+  root.transitionEmotionVideo=(name,timing)=>{
+    const source=emotionVideoUrl(name);
+    if(!source)return false;
+    tvEmotion=name;
+    return tvVideo.transitionToSource(source,timing);
+  };
+  root.setTVStatic=(amount,duration)=>tvVideo.setTransitionStatic(amount,duration);
   root.getEmotionVideo=()=>tvEmotion;
   let persistence;
   function resize(){
@@ -445,7 +452,7 @@ try {
     }
   }
   else persistence=createScenePersistence(root,getState,applyState);
-  renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();backgroundListeners.abort();persistence?.dispose();setTrainRunning(false);cameraControls?.dispose();cursorCamera?.dispose();resizeObserver.disconnect();treeLighting.dispose();tvVideo.dispose();panels.dispose();postProcessing.dispose();delete root.setAmbientLighting;delete root.setAmbientLightingMix;delete root.getAmbientLighting;delete root.setBackgroundBrightness;delete root.getBackgroundBrightness;delete root.setLampLighting;delete root.getLampLighting;delete root.setTreeLighting;delete root.getTreeLighting;delete root.setEmotionVideo;delete root.getEmotionVideo;message.hidden=false;message.textContent='The 3D view lost its graphics connection. Reload to restore the scene.';});
+  renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();backgroundListeners.abort();persistence?.dispose();setTrainRunning(false);cameraControls?.dispose();cursorCamera?.dispose();resizeObserver.disconnect();treeLighting.dispose();tvVideo.dispose();panels.dispose();postProcessing.dispose();delete root.setAmbientLighting;delete root.setAmbientLightingMix;delete root.getAmbientLighting;delete root.setBackgroundBrightness;delete root.getBackgroundBrightness;delete root.setLampLighting;delete root.getLampLighting;delete root.setTreeLighting;delete root.getTreeLighting;delete root.setEmotionVideo;delete root.transitionEmotionVideo;delete root.setTVStatic;delete root.getEmotionVideo;message.hidden=false;message.textContent='The 3D view lost its graphics connection. Reload to restore the scene.';});
   message.hidden=true;root.dataset.ready='true';root.dispatchEvent(new CustomEvent('scene-ready'));
 } catch(error) {
   message.hidden=false;message.textContent='The 3D scene could not start. It needs WebGL and the bundled app files.';

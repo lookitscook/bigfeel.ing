@@ -84,9 +84,11 @@ test('CRT settings stay live across recompilation and shader bypass preserves vi
   crt.setParameter('vignetteStrength', .2);
   crt.setShaderEnabled(false);
   crt.setTime(12.5);
+  crt.setTransitionStatic(.75);
   assert.equal(uniforms.crtScanlineIntensity.value, .65);
   assert.equal(uniforms.crtVignetteStrength.value, .2);
   assert.equal(uniforms.crtTime.value, 12.5);
+  assert.equal(uniforms.crtTransitionStatic.value, .75);
   assert.equal(uniforms.crtEnabled.value, false);
   assert.equal(screen.material, material);
   assert.notEqual(screen.material, originalMaterial);
@@ -120,6 +122,12 @@ test('CRT controls clamp values and reject non-finite parameters', () => {
   }
   crt.setTime(NaN);
   assert.equal(uniforms.crtTime.value, 0);
+  crt.setTransitionStatic(2);
+  assert.equal(uniforms.crtTransitionStatic.value, 1);
+  crt.setTransitionStatic(-1);
+  assert.equal(uniforms.crtTransitionStatic.value, 0);
+  crt.setTransitionStatic(NaN);
+  assert.equal(uniforms.crtTransitionStatic.value, 0);
   assert.doesNotThrow(() => crt.setParameter('unknown', 1));
   crt.dispose();
 });

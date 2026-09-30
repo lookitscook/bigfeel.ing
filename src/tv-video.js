@@ -1,6 +1,7 @@
 import * as THREE from '../vendor/three.module.js';
 import { createCRTScreen } from './crt-screen.js';
 import { createCRTControls } from './crt-controls.js';
+import { smoothStaticStep, tvStaticTransitionFrame } from './tv-static-transition.js';
 
 const MAX_VIDEO_TEXTURE_SIZE = 256;
 
@@ -57,13 +58,62 @@ export function createTVVideo({ src, screen, root, invalidate }) {
   let lastTime = -1;
   let pendingTime = null;
   let currentSource = src;
+  let holdFrame = false;
+  let transitionStatic = 0;
+  let staticFrame = null;
   const hasVideoFrames = typeof video.requestVideoFrameCallback === 'function';
 
   function syncVideoOutput() {
-    const active = enabled && hasFrame && !video.error;
+    const active = enabled && (hasFrame || transitionStatic > .001);
     crt.setEnabled(active);
-    controls.setAvailable(active);
+    controls.setAvailable(enabled && hasFrame);
     invalidate();
+  }
+
+  function setStaticImmediate(value) {
+    transitionStatic = THREE.MathUtils.clamp(Number.isFinite(value) ? value : 0, 0, 1);
+    crt.setTransitionStatic(transitionStatic);
+    syncVideoOutput();
+  }
+
+  function releaseHeldFrame() {
+    if (!holdFrame) return;
+    holdFrame = false;
+    if (video.readyState < video.HAVE_CURRENT_DATA) return;
+    fitVideo();
+    copyFrame();
+    hasFrame = true;
+    if (enabled) updateLight();
+    syncVideoOutput();
+  }
+
+  function stopStaticAnimation(releaseFrame = true) {
+    if (staticFrame !== null) cancelAnimationFrame(staticFrame);
+    staticFrame = null;
+    if (releaseFrame) releaseHeldFrame();
+  }
+
+  function rampStatic(target, duration = 0) {
+    if (disposed) return false;
+    stopStaticAnimation();
+    const to = THREE.MathUtils.clamp(Number.isFinite(target) ? target : 0, 0, 1);
+    const from = transitionStatic;
+    const safeDuration = Number.isFinite(duration) ? Math.max(0, duration) : 0;
+    if (safeDuration === 0 || Math.abs(to - from) < 1e-6) {
+      setStaticImmediate(to);
+      return true;
+    }
+    const startedAt = performance.now();
+    function updateStatic(now) {
+      staticFrame = null;
+      if (disposed) return;
+      const progress = Math.min(1, (now - startedAt) / safeDuration);
+      setStaticImmediate(THREE.MathUtils.lerp(from, to, smoothStaticStep(progress)));
+      crt.setTime(now / 1000);
+      if (progress < 1) staticFrame = requestAnimationFrame(updateStatic);
+    }
+    staticFrame = requestAnimationFrame(updateStatic);
+    return true;
   }
 
   function updateLight() {
@@ -141,7 +191,7 @@ export function createTVVideo({ src, screen, root, invalidate }) {
     animationFrame = null;
     if (disposed || !enabled) return;
     if (!root.isConnected) { dispose(); return; }
-    if (video.readyState >= video.HAVE_CURRENT_DATA && video.currentTime !== lastTime) {
+    if (!holdFrame && video.readyState >= video.HAVE_CURRENT_DATA && video.currentTime !== lastTime) {
       copyFrame();
       updateLight();
       invalidate();
@@ -172,16 +222,19 @@ export function createTVVideo({ src, screen, root, invalidate }) {
     lastTime = -1;
   }
 
-  function setSource(nextSource) {
+  function loadSource(nextSource, preserveFrame = false) {
     if (disposed || !nextSource || nextSource === currentSource) return false;
     currentSource = nextSource;
     pendingTime = null;
-    hasFrame = false;
+    holdFrame = Boolean(preserveFrame && hasFrame);
+    if (!holdFrame) hasFrame = false;
     lastTime = -1;
     stopFrameUpdates();
     video.pause();
-    crt.setEnabled(false);
-    controls.setAvailable(false);
+    if (!holdFrame) {
+      crt.setEnabled(transitionStatic > .001 && enabled);
+      controls.setAvailable(false);
+    }
     showStatus('');
     video.src = currentSource;
     video.load();
@@ -189,15 +242,65 @@ export function createTVVideo({ src, screen, root, invalidate }) {
     invalidate();
     return true;
   }
-  video.addEventListener('loadedmetadata', () => { fitVideo(); restoreTime(); }, options);
+
+  function setSource(nextSource) {
+    stopStaticAnimation();
+    setStaticImmediate(0);
+    return loadSource(nextSource);
+  }
+
+  function transitionToSource(nextSource, timing = {}) {
+    if (disposed || !nextSource) return false;
+    stopStaticAnimation();
+    const duration = Number.isFinite(timing.duration) ? Math.max(0, timing.duration) : 0;
+    const startedAt = Number.isFinite(timing.startedAt) ? timing.startedAt : performance.now();
+    const staticReady = Boolean(timing.staticReady);
+    if (duration === 0) {
+      setStaticImmediate(0);
+      return nextSource === currentSource || loadSource(nextSource);
+    }
+    const changed = nextSource !== currentSource;
+    if (changed) loadSource(nextSource, true);
+    if (!changed && !staticReady) {
+      setStaticImmediate(0);
+      return false;
+    }
+    let revealed = !holdFrame;
+    if (staticReady) {
+      setStaticImmediate(1);
+      releaseHeldFrame();
+      revealed = true;
+    }
+    function updateTransition(now) {
+      staticFrame = null;
+      if (disposed) return;
+      const frame = tvStaticTransitionFrame(now, startedAt, duration, staticReady);
+      setStaticImmediate(frame.amount);
+      crt.setTime(now / 1000);
+      if (frame.reveal && !revealed) {
+        releaseHeldFrame();
+        revealed = true;
+      }
+      if (!frame.done) staticFrame = requestAnimationFrame(updateTransition);
+      else {
+        releaseHeldFrame();
+        setStaticImmediate(0);
+      }
+    }
+    staticFrame = requestAnimationFrame(updateTransition);
+    return true;
+  }
+
+  video.addEventListener('loadedmetadata', () => { if (!holdFrame) fitVideo(); restoreTime(); }, options);
   video.addEventListener('seeked', () => {
-    if (video.readyState < video.HAVE_CURRENT_DATA) return;
+    if (holdFrame || video.readyState < video.HAVE_CURRENT_DATA) return;
     copyFrame();
     if (enabled) updateLight();
     invalidate();
   }, options);
-  video.addEventListener('resize', fitVideo, options);
+  video.addEventListener('resize', () => { if (!holdFrame) fitVideo(); }, options);
   video.addEventListener('loadeddata', () => {
+    if (holdFrame) return;
     fitVideo();
     copyFrame();
     hasFrame = true;
@@ -211,9 +314,11 @@ export function createTVVideo({ src, screen, root, invalidate }) {
     if (frameCallback === null && animationFrame === null) updateFrame();
   }, options);
   video.addEventListener('error', () => {
-    hasFrame = false;
-    crt.setEnabled(false);
-    controls.setAvailable(false);
+    holdFrame = false;
+    if (!hasFrame) {
+      crt.setEnabled(transitionStatic > .001 && enabled);
+      controls.setAvailable(false);
+    }
     stopFrameUpdates();
     if (enabled) showStatus('The TV video could not load. Check that the video file is available and supported.');
     invalidate();
@@ -235,6 +340,7 @@ export function createTVVideo({ src, screen, root, invalidate }) {
     if (disposed) return;
     disposed = true;
     listeners.abort();
+    stopStaticAnimation(false);
     stopFrameUpdates();
     video.pause();
     video.removeAttribute('src');
@@ -250,7 +356,8 @@ export function createTVVideo({ src, screen, root, invalidate }) {
   video.src = currentSource;
   play();
   return {
-    dispose, setEnabled, setSource,
+    dispose, setEnabled, setSource, transitionToSource,
+    setTransitionStatic: rampStatic,
     getSource() { return currentSource; },
     getCRTState() { return controls.getState(); },
     setCRTState(state) { controls.setState(state); },

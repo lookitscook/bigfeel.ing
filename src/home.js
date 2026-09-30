@@ -53,8 +53,9 @@ const emotionAutoplay = createEmotionAutoplay({
 });
 function syncLamp() { caption.setLamp(lampBrightness); scene.setLampLighting?.(lampBrightness); }
 function syncBackgroundBrightness() { scene.setBackgroundBrightness?.(backgroundBrightness); }
+function syncCaptionVideo(name) { caption.setVideo(emotionVideoFilename(name) ?? '—'); }
 function syncEmotionVideo() {
-  caption.setVideo(emotionVideoFilename(selectedEmotion) ?? '—');
+  syncCaptionVideo(selectedEmotion);
   scene.setEmotionVideo?.(selectedEmotion);
 }
 function syncTreeLighting(name = pendingTreeEmotion) {
@@ -74,6 +75,7 @@ selector.addEventListener('pad-selection-change', event => {
   backgroundBrightness = event.detail.backgroundBrightness;
   caption.setPad(event.detail.values);
   syncTreeLighting(event.detail.nearestEmotion ?? pendingTreeEmotion);
+  syncCaptionVideo(event.detail.nearestEmotion ?? selectedEmotion);
   syncLamp();
   syncBackgroundBrightness();
 }, { signal: lampListeners.signal });
@@ -89,7 +91,7 @@ selector.addEventListener('pad-sphere-drag-start', event => {
 selector.addEventListener('pad-emotion-selected', event => {
   selectedEmotion = event.detail.name;
   syncTreeLighting(selectedEmotion);
-  caption.setVideo(emotionVideoFilename(selectedEmotion) ?? '—');
+  syncCaptionVideo(selectedEmotion);
   if (transitioningVideoEmotion !== selectedEmotion) scene.setEmotionVideo?.(selectedEmotion);
   transitioningVideoEmotion = null;
 }, { signal: lampListeners.signal });

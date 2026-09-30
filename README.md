@@ -14,7 +14,9 @@ The scene is `christmas-credenza-tight-3d`. Its 28,447-byte JavaScript module wa
 npm start
 ```
 
-Open **http://127.0.0.1:4178/** in a browser with WebGL enabled. No `npm install` is needed for this command. Press Ctrl+C to stop the server.
+Open **http://127.0.0.1:4178/** for the homepage, or
+**http://127.0.0.1:4178/scene/** for the full scene editor. WebGL must be
+enabled. No `npm install` is needed for this command. Press Ctrl+C to stop the server.
 
 Drag to orbit, **hold Shift while dragging to pan up/down/left/right**, scroll or
 pinch to zoom, and use **Run train / Pause train**. **Reset view** returns to the
@@ -36,7 +38,7 @@ corresponding captured defaults.
 
 ## Homepage preview
 
-Open **http://127.0.0.1:4178/home/** for the combined homepage. It uses the small
+Open **http://127.0.0.1:4178/** for the combined homepage. It uses the small
 Big Feeling logo, the live Christmas scene, and the same interactive PAD sphere
 as the editors. Navigation sits on the left on desktop and across the top on
 mobile. The sphere sits at the bottom of the desktop navigation, keeping a
@@ -139,8 +141,8 @@ becomes 0.5, and `D = 1` becomes 1. The intensity ring does not alter this
 surface-derived value. The selector publishes the same value as
 `pad-selection-change.detail.brightness`.
 
-For live appearance controls, open **http://127.0.0.1:4178/home/?debug=true**
-with `npm start`, or open `/home/?debug=true` on the `npm run dev` server. Logo crosshatch and edge softness use the logo
+For live appearance controls, open **http://127.0.0.1:4178/?debug=true**
+with `npm start`, or open `/?debug=true` on the `npm run dev` server. Logo crosshatch and edge softness use the logo
 editor’s saved settings. Christmas crosshatch and CRT video settings save
 separately for the homepage. Changes update immediately and survive reloads,
 including visits without the debug parameter. Controls are unavailable in
@@ -151,8 +153,9 @@ The homepage Christmas crosshatch scale follows the rendered image width: it is
 and 480 pixels, and remains 1.5 at desktop sizes. Device-pixel ratio does not
 change that visual scale.
 
-Layout and placeholder copy: `home/index.html` and `src/home.css`. This route is
-included in the normal Vite build; it does not generate standalone HTML editions.
+Layout and placeholder copy: `index.html` and `src/home.css`. The legacy
+`home/index.html` route remains available, while the scene editor lives at
+`scene/index.html`.
 
 ## Save and restore
 
@@ -531,29 +534,29 @@ Pages** can also be run manually from the Actions tab.
    to **GitHub Actions**.
 3. Push to `main`, or run the workflow manually.
 
-For the current `lookitscook/christmas-credenza` repository, the default published
-URL will be **https://lookitscook.github.io/christmas-credenza/**. The workflow gets
-the site's base path from GitHub Pages, so the JavaScript, textures, and video load
-under the repository URL. A custom domain configured in Pages uses `/` instead.
-No deploy token or additional secret is needed; the workflow uses `GITHUB_TOKEN`.
+The production site is **https://bigfeel.ing/**. The workflow builds every asset
+from `/` and includes `public/CNAME`, so JavaScript, CSS, fonts, textures, and
+videos resolve against that custom-domain root. No deploy token or additional
+secret is needed; the workflow uses `GITHUB_TOKEN`.
 
 The workflow rebuilds from source on every run. Its artifact contains the scene,
 logo editor, PAD sphere, video, and license notices from `dist/`.
-To verify the project URL paths locally, run `BASE_PATH=/christmas-credenza/ npm run
-build`. Running `npm run build` without that variable produces portable relative paths.
+Running `npm run build` produces the root-relative custom-domain artifact. To
+exercise a repository-subpath build separately, set `BASE_PATH` explicitly.
 
 See [GitHub's custom Pages workflow documentation](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages).
 
 ## Files
 
-- `index.html`, `src/`, `vendor/` — readable app with local dependencies.
+- `index.html`, `src/`, `vendor/` — homepage and readable local dependencies.
+- `scene/index.html` — full Christmas scene editor.
 - `src/cross-hatch.js`, `src/post-processing.js` — optional effect and configuration controls.
 - `src/tv-video.js`, `src/crt-screen.js` — silent looping video, reflective CRT glass, glow, area light, and on/off control.
 - `src/crt-shader.js`, `src/crt-controls.js`, `src/effect-panels.js` — CRT picture effects, live controls, and reopenable settings panels.
 - `src/camera-controls.js`, `src/scene-state.js` — constrained orbit/pan/zoom, JSON import/export, and automatic state persistence.
 - `pad/index.html`, `src/pad-editor.js`, `src/pad-model.js` — PAD sphere selector, shared palette, and YUV mapping.
 - `src/pad-landmarks.js` — all 151 Table 4 mean PAD triplets, with source attribution and original row order.
-- `.github/workflows/pages.yml`, `.nvmrc` — GitHub Pages build/deploy workflow and Node.js version.
+- `.github/workflows/pages.yml`, `public/CNAME`, `.nvmrc` — custom-domain GitHub Pages deployment and Node.js version.
 - `original/scene.js` — unmodified module text recovered from the requested post.
 - `original/rendered-app.html` — archived live iframe DOM, including the original host wrapper. This is a source record and retains its original external URLs; use the runnable files above.
 - `original/preview.png` — the original scene captured in the conversation.

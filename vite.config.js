@@ -1,10 +1,11 @@
 import { defineConfig } from 'vite';
 import { copyFile, mkdir } from 'node:fs/promises';
 export default defineConfig({
-  // Pages supplies /repository/ (or / for a custom domain). Local builds stay portable.
-  base: process.env.BASE_PATH || './',
+  // bigfeel.ing is served from the domain root. BASE_PATH remains available for
+  // explicitly testing a repository-subpath deployment.
+  base: process.env.BASE_PATH || '/',
   build: { target: 'es2022', minify: false, cssMinify: false,
-    rolldownOptions: { input: { scene: 'index.html', logo: 'logo/index.html', pad: 'pad/index.html', home: 'home/index.html' } },
+    rolldownOptions: { input: { home: 'index.html', scene: 'scene/index.html', logo: 'logo/index.html', pad: 'pad/index.html', legacyHome: 'home/index.html' } },
   },
   plugins: [{
     name: 'bundle-third-party-licenses',

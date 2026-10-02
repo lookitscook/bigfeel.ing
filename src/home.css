@@ -8,6 +8,13 @@
 @font-face {
   font-family: Literata;
   font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../vendor/fonts/Literata-400.ttf') format('truetype');
+}
+@font-face {
+  font-family: Literata;
+  font-style: normal;
   font-weight: 650;
   font-display: swap;
   src: url('../vendor/fonts/Literata-650.ttf') format('truetype');
@@ -57,7 +64,8 @@ button, select { font: inherit; }
 .home-nav { margin-bottom: 40px; }
 .home-heading { --home-heading-space:30px; display:grid; gap:calc(var(--home-heading-space) / 4); padding:var(--home-heading-space) 0; }
 .home-heading h1 {text-align:center; margin: 0; font: 650 1.2em Literata, Georgia, serif; letter-spacing: -.035em; }
-.home-subtitle { margin:0; color:#000; text-align: center; font:italic 650 .8235em/1.45 Literata, Georgia, serif; }
+.home-subtitle { margin:0; color:#000; text-align: center; font:italic 400 .8235em/1.45 Literata, Georgia, serif; }
+.home-subtitle-emphasis { font-weight:650; }
 .home-subtitle-break { display:none; }
 .home-body { max-width: var(--home-text-measure); font-size: inherit; line-height: 1.95; }
 .home-body p { margin: 0 0 1.6em; }
